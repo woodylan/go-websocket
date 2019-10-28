@@ -1,11 +1,18 @@
 package src
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
-	"strconv"
+	"time"
+)
+
+const (
+	// 最大的消息大小
+	maxMessageSize = 8192
+
+	// 心跳间隔
+	heartbeatInterval = 10 * time.Second
 )
 
 type WebsocketHandler struct {
@@ -31,30 +38,39 @@ func (wh *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	clintId := GenUUID()
+	clientId := GenUUID()
 
 	//给客户端绑定ID
-	wh.binder.BindToMap(clintId, conn)
+	wh.binder.BindToMap(clientId, conn)
 
 	//返回给客户端
-	if err = conn.WriteJSON(toClient{ClientId: clintId}); err != nil {
-		conn.Close()
+	if err = conn.WriteJSON(toClient{ClientId: clientId}); err != nil {
+		_ = conn.Close()
 	}
 
-	wh.readMessage(conn)
+	//设置读取消息大小上线
+	conn.SetReadLimit(maxMessageSize)
+
+	//发送心跳
+	wh.SendJump(conn)
+
+	//读取消息并发送
+	wh.readMessage(conn, clientId)
 }
 
-func (wh *WebsocketHandler) readMessage(conn *websocket.Conn) {
+func (wh *WebsocketHandler) readMessage(conn *websocket.Conn, clientId string) {
 	for {
 		var inputData inputData
+
 		err := conn.ReadJSON(&inputData)
 		if err != nil {
 			log.Printf("read error: %v", err)
+			//删除这个客户端
+			wh.binder.DelMap(clientId)
+			return
 		}
 
-		fmt.Println(inputData.Message)
-
-		wh.toClientChan <- []string{inputData.ClientId, inputData.Message}
+		wh.toClientChan <- [2]string{inputData.ClientId, inputData.Message}
 	}
 }
 
@@ -68,4 +84,20 @@ func (wh *WebsocketHandler) WriteMessage() {
 			}
 		}
 	}
+}
+
+//发送心跳数据
+func (wh *WebsocketHandler) SendJump(conn *websocket.Conn) {
+	go func() {
+		var (
+			err error
+		)
+		for {
+			if err = conn.WriteJSON("heartbeat"); err != nil {
+				return
+			}
+			time.Sleep(heartbeatInterval)
+		}
+
+	}()
 }
