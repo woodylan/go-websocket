@@ -89,14 +89,11 @@ func (wh *WebsocketHandler) WriteMessage() {
 //发送心跳数据
 func (wh *WebsocketHandler) SendJump(conn *websocket.Conn) {
 	go func() {
-		var (
-			err error
-		)
 		for {
-			if err = conn.WriteJSON("heartbeat"); err != nil {
+			time.Sleep(heartbeatInterval)
+			if err := conn.WriteJSON("heartbeat"); err != nil {
 				return
 			}
-			time.Sleep(heartbeatInterval)
 		}
 
 	}()
