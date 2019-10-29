@@ -48,6 +48,8 @@ func (wh *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		_ = conn.Close()
 	}
 
+	log.Printf("客户端已连接:%s 总连接数：%d", clientId, wh.binder.ClientNumber())
+
 	//设置读取消息大小上线
 	conn.SetReadLimit(maxMessageSize)
 
