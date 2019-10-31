@@ -45,17 +45,19 @@ func (s *Server) ListenAndServer() error {
 		clintId2ConnMap: make(map[string]*Conn),
 	}
 
-	toClientChan := make(chan [2]string, 2)
-
-	wh := &WebsocketHandler{
+	websocketHandler := &WebsocketHandler{
 		defaultUpgrader,
 		b,
-		toClientChan,
 	}
 
-	go wh.WriteMessage()
+	pushHandler := &PushHandler{
+		binder: b,
+	}
 
-	http.Handle(s.WSPath, wh)
+	http.Handle(s.WSPath, websocketHandler)
+	http.Handle(s.PushPath,pushHandler)
+
+	go websocketHandler.WriteMessage()
 
 	return http.ListenAndServe(s.Addr, nil)
 }

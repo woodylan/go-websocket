@@ -1,7 +1,9 @@
 package src
 
 import (
+	"encoding/json"
 	"github.com/gorilla/websocket"
+	"io"
 	"log"
 	"net/http"
 	"time"
@@ -15,10 +17,16 @@ const (
 	heartbeatInterval = 10 * time.Second
 )
 
+//channel通道
+var toClientChan chan [2]string
+
 type WebsocketHandler struct {
-	upgrader     *websocket.Upgrader
-	binder       *binder
-	toClientChan chan [2]string
+	upgrader *websocket.Upgrader
+	binder   *binder
+}
+
+type PushHandler struct {
+	binder *binder
 }
 
 type toClient struct {
@@ -28,6 +36,16 @@ type toClient struct {
 type inputData struct {
 	ClientId string `json:"clientId"`
 	Message  string `json:"message"`
+}
+
+type RetData struct {
+	Code int         `json:"code"`
+	Msg  string      `json:"msg"`
+	Date interface{} `json:"data"`
+}
+
+func init() {
+	toClientChan = make(chan [2]string, 10)
 }
 
 func (wh *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -56,8 +74,34 @@ func (wh *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//发送心跳
 	wh.SendJump(conn)
 
-	//读取消息并发送
-	wh.readMessage(conn, clientId)
+	//读取消息并发送 在这不提供
+	//wh.readMessage(conn, clientId)
+
+	//阻塞main线程
+	select {}
+}
+
+func (ph *PushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	//解析参数
+	_ = r.ParseForm()
+	var inputData inputData
+	if err := json.NewDecoder(r.Body).Decode(&inputData); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	//发送信息
+	toClientChan <- [2]string{inputData.ClientId, inputData.Message}
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	_, _ = io.WriteString(w, render(0, "success", []string{}))
+
+	return
 }
 
 func (wh *WebsocketHandler) readMessage(conn *websocket.Conn, clientId string) {
@@ -72,14 +116,14 @@ func (wh *WebsocketHandler) readMessage(conn *websocket.Conn, clientId string) {
 			return
 		}
 
-		wh.toClientChan <- [2]string{inputData.ClientId, inputData.Message}
+		toClientChan <- [2]string{inputData.ClientId, inputData.Message}
 	}
 }
 
 func (wh *WebsocketHandler) WriteMessage() {
 	for {
 		select {
-		case clientInfo := <-wh.toClientChan:
+		case clientInfo := <-toClientChan:
 			toConn, ok := wh.binder.clintId2ConnMap[clientInfo[0]];
 			if ok {
 				_ = toConn.Conn.WriteJSON(clientInfo[1]);
@@ -99,4 +143,16 @@ func (wh *WebsocketHandler) SendJump(conn *websocket.Conn) {
 		}
 
 	}()
+}
+
+func render(code int, msg string, data interface{}) (str string) {
+	var retData RetData
+
+	retData.Code = code
+	retData.Msg = msg
+	retData.Date = data
+
+	retJson, _ := json.Marshal(retData)
+	str = string(retJson)
+	return
 }
