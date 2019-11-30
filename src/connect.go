@@ -6,16 +6,18 @@ import (
 )
 
 const (
-	defaultWSPath   = "/ws"
-	defaultPushPath = "/push"
+	defaultWSPath    = "/ws"
+	pushToClientPath = "/push_to_client"
+	pushToGroupPath  = "/push_to_group"
 )
 
 type Server struct {
-	Addr     string //监听地址
-	WSPath   string //websocket路径，如'/ws'
-	PushPath string //推送消息地址,如'/push'
-	Upgrader *websocket.Upgrader
-	wh       *WebsocketHandler
+	Addr             string //监听地址
+	WSPath           string //websocket路径，如'/ws'
+	PushToClientPath string //推送消息到指定客户端地址,如'/push_to_client'
+	PushToGroupPath  string //推送消息到指定分组地址,如'/push_to_group'
+	Upgrader         *websocket.Upgrader
+	wh               *WebsocketHandler
 }
 
 type Conn struct {
@@ -34,9 +36,10 @@ var defaultUpgrader = &websocket.Upgrader{
 
 func NewServer(addr string) *Server {
 	return &Server{
-		Addr:     addr,
-		WSPath:   defaultWSPath,
-		PushPath: defaultPushPath,
+		Addr:             addr,
+		WSPath:           defaultWSPath,
+		PushToClientPath: pushToClientPath,
+		PushToGroupPath:  pushToGroupPath,
 	}
 }
 
@@ -50,12 +53,12 @@ func (s *Server) ListenAndServer() error {
 		b,
 	}
 
-	pushHandler := &PushHandler{
+	pushHandler := &PushToClientHandler{
 		binder: b,
 	}
 
 	http.Handle(s.WSPath, websocketHandler)
-	http.Handle(s.PushPath,pushHandler)
+	http.Handle(s.PushToClientPath, pushHandler)
 
 	go websocketHandler.WriteMessage()
 

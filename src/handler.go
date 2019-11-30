@@ -3,7 +3,6 @@ package src
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
-	"io"
 	"log"
 	"net/http"
 	"time"
@@ -25,17 +24,8 @@ type WebsocketHandler struct {
 	binder   *binder
 }
 
-type PushHandler struct {
-	binder *binder
-}
-
 type toClient struct {
 	ClientId string `json:"clientId"`
-}
-
-type inputData struct {
-	ClientId string `json:"clientId"`
-	Message  string `json:"message"`
 }
 
 type RetData struct {
@@ -81,44 +71,22 @@ func (wh *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	select {}
 }
 
-func (ph *PushHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	//解析参数
-	_ = r.ParseForm()
-	var inputData inputData
-	if err := json.NewDecoder(r.Body).Decode(&inputData); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	//发送信息
-	toClientChan <- [2]string{inputData.ClientId, inputData.Message}
-
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	_, _ = io.WriteString(w, render(0, "success", []string{}))
-
-	return
-}
-
-func (wh *WebsocketHandler) readMessage(conn *websocket.Conn, clientId string) {
-	for {
-		var inputData inputData
-
-		err := conn.ReadJSON(&inputData)
-		if err != nil {
-			log.Printf("read error: %v", err)
-			//删除这个客户端
-			wh.binder.DelMap(clientId)
-			return
-		}
-
-		toClientChan <- [2]string{inputData.ClientId, inputData.Message}
-	}
-}
+//websocket客户端发送消息
+//func (wh *WebsocketHandler) readMessage(conn *websocket.Conn, clientId string) {
+//	for {
+//		var inputData inputData
+//
+//		err := conn.ReadJSON(&inputData)
+//		if err != nil {
+//			log.Printf("read error: %v", err)
+//			//删除这个客户端
+//			wh.binder.DelMap(clientId)
+//			return
+//		}
+//
+//		toClientChan <- [2]string{inputData.ClientId, inputData.Message}
+//	}
+//}
 
 func (wh *WebsocketHandler) WriteMessage() {
 	for {
