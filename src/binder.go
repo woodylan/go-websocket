@@ -9,6 +9,8 @@ type binder struct {
 	mu sync.RWMutex
 
 	clintId2ConnMap map[string]*Conn
+	clientGroupsMap map[string][]string
+	groupClientIds  map[string][]string
 }
 
 //给客户端绑定ID

@@ -9,6 +9,7 @@ const (
 	defaultWSPath    = "/ws"
 	pushToClientPath = "/push_to_client"
 	pushToGroupPath  = "/push_to_group"
+	bindToGroupPath  = "/bind_to_group"
 )
 
 type Server struct {
@@ -16,6 +17,7 @@ type Server struct {
 	WSPath           string //websocket路径，如'/ws'
 	PushToClientPath string //推送消息到指定客户端地址,如'/push_to_client'
 	PushToGroupPath  string //推送消息到指定分组地址,如'/push_to_group'
+	BindToGroupPath  string //绑定到分组的地址，如'/bind_to_group'
 	Upgrader         *websocket.Upgrader
 	wh               *WebsocketHandler
 }
@@ -40,12 +42,15 @@ func NewServer(addr string) *Server {
 		WSPath:           defaultWSPath,
 		PushToClientPath: pushToClientPath,
 		PushToGroupPath:  pushToGroupPath,
+		BindToGroupPath:  bindToGroupPath,
 	}
 }
 
 func (s *Server) ListenAndServer() error {
 	b := &binder{
 		clintId2ConnMap: make(map[string]*Conn),
+		clientGroupsMap: make(map[string][]string, 0),
+		groupClientIds:  make(map[string][]string, 0),
 	}
 
 	websocketHandler := &WebsocketHandler{
@@ -53,12 +58,17 @@ func (s *Server) ListenAndServer() error {
 		b,
 	}
 
-	pushHandler := &PushToClientHandler{
+	pushToClientHandler := &PushToClientHandler{
+		binder: b,
+	}
+
+	bindToGroupHandler := &BindToGroupHandler{
 		binder: b,
 	}
 
 	http.Handle(s.WSPath, websocketHandler)
-	http.Handle(s.PushToClientPath, pushHandler)
+	http.Handle(s.PushToClientPath, pushToClientHandler)
+	http.Handle(s.BindToGroupPath, bindToGroupHandler)
 
 	go websocketHandler.WriteMessage()
 
