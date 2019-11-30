@@ -62,12 +62,17 @@ func (s *Server) ListenAndServer() error {
 		binder: b,
 	}
 
+	pushToGroupHandler := &PushToGroupHandler{
+		binder: b,
+	}
+
 	bindToGroupHandler := &BindToGroupHandler{
 		binder: b,
 	}
 
 	http.Handle(s.WSPath, websocketHandler)
 	http.Handle(s.PushToClientPath, pushToClientHandler)
+	http.Handle(s.PushToGroupPath, pushToGroupHandler)
 	http.Handle(s.BindToGroupPath, bindToGroupHandler)
 
 	go websocketHandler.WriteMessage()
