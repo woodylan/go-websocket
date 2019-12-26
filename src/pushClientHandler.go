@@ -2,7 +2,6 @@ package src
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 )
@@ -31,9 +30,7 @@ func (ph *PushToClientHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 
 	//发送信息
-	toClientChan <- [2]string{inputData.ClientId, inputData.Message}
-
-	fmt.Println(inputData.ClientId, inputData.Message)
+	ph.binder.SendMessage2Client(inputData.ClientId, inputData.Message)
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	_, _ = io.WriteString(w, render(0, "success", []string{}))

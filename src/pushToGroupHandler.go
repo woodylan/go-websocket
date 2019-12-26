@@ -29,14 +29,7 @@ func (b *PushToGroupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(inputData.GroupName) > 0 {
-		if clientList, ok := b.binder.groupClientIds[inputData.GroupName]; ok {
-			for _, client := range clientList {
-				//发送信息
-				toClientChan <- [2]string{client, inputData.Message}
-			}
-		}
-	}
+	b.binder.SendMessage2Group(inputData.GroupName, inputData.Message)
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	_, _ = io.WriteString(w, render(0, "success", []string{}))
