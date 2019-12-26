@@ -2,7 +2,6 @@ package src
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 )
@@ -33,8 +32,6 @@ func (b *PushToGroupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(inputData.GroupName) > 0 {
 		if clientList, ok := b.binder.groupClientIds[inputData.GroupName]; ok {
 			for _, client := range clientList {
-				fmt.Println("发送消息")
-				fmt.Println(client)
 				//发送信息
 				toClientChan <- [2]string{client, inputData.Message}
 			}

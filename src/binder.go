@@ -14,17 +14,18 @@ type binder struct {
 }
 
 //给客户端绑定ID
-func (b *binder) BindToMap(clintId string, conn *websocket.Conn) {
+func (b *binder) BindToMap(clientId string, conn *websocket.Conn) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	b.clintId2ConnMap[clintId] = &Conn{Conn: conn}
+	b.clintId2ConnMap[clientId] = &Conn{Conn: conn}
 }
 
 //删除客户端
-func (b *binder) DelMap(clintId string) {
+func (b *binder) DelMap(clientId string) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	delete(b.clintId2ConnMap, clintId)
+	delete(b.clintId2ConnMap, clientId)
+	delete(b.clientGroupsMap, clientId)
 }
 
 //客户端数量
