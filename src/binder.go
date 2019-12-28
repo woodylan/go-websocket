@@ -1,8 +1,11 @@
 package src
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"go-websocket/define"
+	"go-websocket/src/readConfig"
 	"sync"
 )
 
@@ -12,6 +15,12 @@ type binder struct {
 	clintId2ConnMap map[string]*Conn
 	clientGroupsMap map[string][]string
 	groupClientIds  map[string][]string
+}
+
+type publishMessage struct {
+	MsgType  int    `json:"type"`     //消息类型 1.指定客户端 2.指定分组
+	ObjectId string `json:"objectId"` //对象ID，如果是client为clientId，如果是分组则为groupId
+	Message  string `json:"message"`  //消息内容
 }
 
 //给客户端绑定ID
@@ -34,36 +43,65 @@ func (b *binder) ClientNumber() int {
 	return len(b.clintId2ConnMap)
 }
 
-//是否为单机
-func (b *binder) isStandalone() bool {
-	return true
+//是否集群
+func isCluster() bool {
+	cluster, _ := readConfig.ConfigData.Bool("common::cluster")
+
+	return cluster
 }
 
 //发送信息到指定客户端
 func (b *binder) SendMessage2Client(clientId, message string) {
-	if b.isStandalone() {
-		//如果是单机服务，则只发送到本机
-		toClientChan <- [2]string{clientId, message}
-		fmt.Println(clientId, message)
+	if isCluster() {
+		//发送到RabbitMQ
+		Send2RabbitMQ(define.MESSAGE_TYPE_CLIENT, clientId, message)
 	} else {
-
+		//如果是单机服务，则只发送到本机
+		SendMessage2Client(clientId, message)
 	}
 }
 
 //发送信息到指定分组
 func (b *binder) SendMessage2Group(groupName, message string) {
-	if b.isStandalone() {
-		//如果是单机服务，则只发送到本机
-		if len(groupName) > 0 {
-			if clientList, ok := b.groupClientIds[groupName]; ok {
-				for _, client := range clientList {
-					//发送信息
-					toClientChan <- [2]string{client, message}
-				}
-			}
-		}
+	if isCluster() {
+		//发送到RabbitMQ
+		Send2RabbitMQ(define.MESSAGE_TYPE_GROUP, groupName, message)
 	} else {
-		
+		//如果是单机服务，则只发送到本机
+		b.SendMessage2LocalGroup(groupName, message)
+	}
+}
+
+func SendMessage2Client(clientId, message string) {
+	toClientChan <- [2]string{clientId, message}
+	fmt.Println(clientId, message)
+}
+
+//发送到RabbitMQ
+func Send2RabbitMQ(msgType int, objectId, message string) {
+	if rabbitMQ == nil {
+		initRabbitMQ()
 	}
 
+	publishMessage := publishMessage{
+		MsgType:  msgType,
+		ObjectId: objectId,
+		Message:  message,
+	}
+
+	messageByte, _ := json.Marshal(publishMessage)
+
+	rabbitMQ.PublishPub(string(messageByte))
+}
+
+//发送到本机分组
+func (b *binder) SendMessage2LocalGroup(groupName, message string) {
+	if len(groupName) > 0 {
+		if clientList, ok := b.groupClientIds[groupName]; ok {
+			for _, clientId := range clientList {
+				//发送信息
+				SendMessage2Client(clientId, message)
+			}
+		}
+	}
 }

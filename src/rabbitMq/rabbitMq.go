@@ -6,8 +6,6 @@ import (
 	"log"
 )
 
-const AMQPURL = "amqp://dylan:dylan@127.0.0.1:5672/dylanhost"
-
 type RabbitMQ struct {
 	conn      *amqp.Connection
 	channel   *amqp.Channel
@@ -18,7 +16,7 @@ type RabbitMQ struct {
 }
 
 //创建结构体
-func NewRabbitMQ(queueName string, exchange string, key string) *RabbitMQ {
+func NewRabbitMQ(queueName string, AMQPURL string, exchange string, key string) *RabbitMQ {
 	return &RabbitMQ{
 		QueueName: queueName,
 		Exchange:  exchange,
@@ -28,9 +26,9 @@ func NewRabbitMQ(queueName string, exchange string, key string) *RabbitMQ {
 }
 
 //发布订阅模式创建实例
-func NewRabbitMQPubSub(exchangeName string) *RabbitMQ {
+func NewRabbitMQPubSub(AMQPURL string, exchangeName string) *RabbitMQ {
 	//创建RabbitMQ实例
-	rabbitMQ := NewRabbitMQ("", exchangeName, "")
+	rabbitMQ := NewRabbitMQ("", AMQPURL, exchangeName, "")
 
 	var err error
 
