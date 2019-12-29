@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/websocket"
 	"go-websocket/define"
 	"go-websocket/src/readConfig"
+	"go-websocket/src/redis"
 	"sync"
 )
 
@@ -97,11 +98,33 @@ func Send2RabbitMQ(msgType int, objectId, message string) {
 //发送到本机分组
 func (b *binder) SendMessage2LocalGroup(groupName, message string) {
 	if len(groupName) > 0 {
-		if clientList, ok := b.groupClientIds[groupName]; ok {
+		clientList := GetGroupList(groupName)
+		if len(clientList) > 0 {
 			for _, clientId := range clientList {
 				//发送信息
+				//todo key的销毁
 				SendMessage2Client(clientId, message)
 			}
 		}
 	}
+}
+
+func SetGroupList(groupName, clientId string) {
+	//如果是单机的情况
+	//h.binder.groupClientIds[inputData.GroupName] = append(h.binder.groupClientIds[inputData.GroupName], inputData.ClientId)
+
+	_, err := redis.SetAdd(define.REDIS_KEY_GROUP+groupName, clientId)
+	if err != nil {
+		panic(err)
+	}
+
+}
+
+func GetGroupList(groupName string) ([]string) {
+	groupList, err := redis.SetMembers(define.REDIS_KEY_GROUP + groupName)
+	if err != nil {
+		panic(err)
+	}
+
+	return groupList
 }

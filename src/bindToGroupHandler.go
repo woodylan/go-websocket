@@ -34,7 +34,7 @@ func (h *BindToGroupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		//todo 判断是否已经存在
 		//todo 这里需要考虑clientId在集群上的其他机器的情况
 
-		h.binder.groupClientIds[inputData.GroupName] = append(h.binder.groupClientIds[inputData.GroupName], inputData.ClientId)
+		SetGroupList(inputData.GroupName,inputData.ClientId)
 		h.binder.clientGroupsMap[inputData.ClientId] = append(h.binder.clientGroupsMap[inputData.ClientId], inputData.GroupName)
 	} else {
 		fmt.Println("参数错误")
