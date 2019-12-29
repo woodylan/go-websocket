@@ -3,6 +3,7 @@ package src
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
+	"go-websocket/tools/util"
 	"log"
 	"net/http"
 	"time"
@@ -46,7 +47,7 @@ func (wh *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	clientId := GenUUID()
+	clientId := util.GenUUID()
 
 	//给客户端绑定ID
 	wh.binder.BindToMap(clientId, conn)

@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"go-websocket/define"
-	RabbitMQ "go-websocket/src/rabbitMq"
-	"go-websocket/src/readConfig"
+	"go-websocket/pkg/rabbitmq"
 	"log"
 	"net/http"
 )
 
 //RabbitMQ 实例
-var rabbitMQ *RabbitMQ.RabbitMQ
+var rabbitMQ *rabbitmq.RabbitMQ
 
 const (
 	defaultWSPath    = "/ws"
@@ -97,9 +96,9 @@ func (s *Server) ListenAndServer() error {
 
 //创建rabbitMQ实例
 func initRabbitMQ() {
-	rabbitMQ = RabbitMQ.NewRabbitMQPubSub(
-		readConfig.ConfigData.String("rabbitMQ::amqpurl"),
-		readConfig.ConfigData.String("rabbitMQ::exchange"))
+	rabbitMQ = rabbitmq.NewRabbitMQPubSub(
+		read_config.ConfigData.String("rabbitMQ::amqpurl"),
+		read_config.ConfigData.String("rabbitMQ::exchange"))
 
 }
 

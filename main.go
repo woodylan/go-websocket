@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"go-websocket/src"
-	"go-websocket/src/readConfig"
+	"go-websocket/tools/readConfig"
 	"os"
 )
 
@@ -12,7 +12,7 @@ func main() {
 	server := src.NewServer(":" + port)
 
 	//读取配置文件
-	readConfig.ReadConfig()
+	readconfig.ReadConfig()
 
 	fmt.Printf("服务器启动成功，端口号：%s\n", port)
 

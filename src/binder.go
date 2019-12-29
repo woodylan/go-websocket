@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/gorilla/websocket"
 	"go-websocket/define"
-	"go-websocket/src/readConfig"
-	"go-websocket/src/redis"
+	"go-websocket/pkg/redis"
+	"go-websocket/tools/readconfig"
 	"sync"
 )
 
@@ -46,7 +46,7 @@ func (b *binder) ClientNumber() int {
 
 //是否集群
 func isCluster() bool {
-	cluster, _ := readConfig.ConfigData.Bool("common::cluster")
+	cluster, _ := readconfig.ConfigData.Bool("common::cluster")
 
 	return cluster
 }

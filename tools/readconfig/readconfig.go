@@ -1,4 +1,4 @@
-package readConfig
+package readconfig
 
 import (
 	"github.com/astaxie/beego/config"
@@ -9,7 +9,7 @@ var ConfigData config.Configer
 func ReadConfig() {
 	var err error
 
-	ConfigData, err = config.NewConfig("ini", "config/config.ini")
+	ConfigData, err = config.NewConfig("ini", "configs/config.ini")
 	if err != nil {
 		panic("读取配置文件错误")
 	}
