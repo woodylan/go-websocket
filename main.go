@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"go-websocket/src"
-	"go-websocket/tools/readConfig"
+	"go-websocket/tools/readconfig"
 	"os"
 )
 

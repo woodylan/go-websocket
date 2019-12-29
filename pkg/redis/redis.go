@@ -3,13 +3,13 @@ package redis
 import (
 	"fmt"
 	"github.com/gomodule/redigo/redis"
-	"go-websocket/tools/readConfig"
+	"go-websocket/tools/readconfig"
 )
 
 func connect() (redis.Conn, error) {
-	host := read_config.ConfigData.String("redis::host")
-	port := read_config.ConfigData.String("redis::port")
-	password := read_config.ConfigData.String("redis::password")
+	host := readconfig.ConfigData.String("redis::host")
+	port := readconfig.ConfigData.String("redis::port")
+	password := readconfig.ConfigData.String("redis::password")
 
 	var Conn redis.Conn
 	var err error

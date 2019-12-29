@@ -2,6 +2,7 @@ package src
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"go-websocket/tools/util"
 	"log"
@@ -50,7 +51,7 @@ func (wh *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	clientId := util.GenUUID()
 
 	//给客户端绑定ID
-	wh.binder.BindToMap(clientId, conn)
+	wh.binder.AddClient(clientId, conn)
 
 	//返回给客户端
 	if err = conn.WriteJSON(toClient{ClientId: clientId}); err != nil {
@@ -112,6 +113,12 @@ func (wh *WebsocketHandler) SendJump(conn *websocket.Conn) {
 		}
 
 	}()
+}
+
+//通过本服务器发送信息
+func SendMessage2LocalClient(clientId, message string) {
+	toClientChan <- [2]string{clientId, message}
+	fmt.Println(clientId, message)
 }
 
 func render(code int, msg string, data interface{}) (str string) {

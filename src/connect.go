@@ -1,17 +1,10 @@
 package src
 
 import (
-	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
-	"go-websocket/define"
-	"go-websocket/pkg/rabbitmq"
-	"log"
+	"go-websocket/tools/util"
 	"net/http"
 )
-
-//RabbitMQ 实例
-var rabbitMQ *rabbitmq.RabbitMQ
 
 const (
 	defaultWSPath    = "/ws"
@@ -55,33 +48,29 @@ func NewServer(addr string) *Server {
 }
 
 func (s *Server) ListenAndServer() error {
-	b := &binder{
-		clintId2ConnMap: make(map[string]*Conn),
-		clientGroupsMap: make(map[string][]string, 0),
-		groupClientIds:  make(map[string][]string, 0),
-	}
+	binder := NewBinder()
 
 	//如果是集群，则读取初始化RabbitMQ实例
-	if isCluster() {
+	if util.IsCluster() {
 		initRabbitMQ()
-		initRabbitMQReceive(b)
+		initRabbitMQReceive(binder)
 	}
 
 	websocketHandler := &WebsocketHandler{
 		defaultUpgrader,
-		b,
+		binder,
 	}
 
 	pushToClientHandler := &PushToClientHandler{
-		binder: b,
+		binder: binder,
 	}
 
 	pushToGroupHandler := &PushToGroupHandler{
-		binder: b,
+		binder: binder,
 	}
 
 	bindToGroupHandler := &BindToGroupHandler{
-		binder: b,
+		binder: binder,
 	}
 
 	http.Handle(s.WSPath, websocketHandler)
@@ -92,39 +81,4 @@ func (s *Server) ListenAndServer() error {
 	go websocketHandler.WriteMessage()
 
 	return http.ListenAndServe(s.Addr, nil)
-}
-
-//创建rabbitMQ实例
-func initRabbitMQ() {
-	rabbitMQ = rabbitmq.NewRabbitMQPubSub(
-		read_config.ConfigData.String("rabbitMQ::amqpurl"),
-		read_config.ConfigData.String("rabbitMQ::exchange"))
-
-}
-
-func initRabbitMQReceive(b *binder) {
-	msgs, err := rabbitMQ.ReceiveSub()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	go func() {
-		for receiveData := range msgs {
-			log.Printf("Received a message: %s", receiveData.Body)
-
-			var publishMessage publishMessage
-			err := json.Unmarshal([]byte(receiveData.Body), &publishMessage)
-			if err == nil {
-				if publishMessage.MsgType == define.MESSAGE_TYPE_CLIENT {
-					//发送到指定客户端
-					SendMessage2Client(publishMessage.ObjectId, publishMessage.Message)
-				} else if publishMessage.MsgType == define.MESSAGE_TYPE_GROUP {
-					//发送到指定分组
-					b.SendMessage2LocalGroup(publishMessage.ObjectId, publishMessage.Message)
-				}
-			} else {
-				fmt.Println(err)
-			}
-		}
-	}()
 }

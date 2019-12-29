@@ -2,6 +2,7 @@ package util
 
 import (
 	uuid "github.com/satori/go.uuid"
+	"go-websocket/tools/readconfig"
 	"strings"
 )
 
@@ -12,4 +13,11 @@ func GenUUID() string {
 	uuidStr = strings.Replace(uuidStr, "-", "", -1)
 	uuidByt := []rune(uuidStr)
 	return string(uuidByt[8:24])
+}
+
+//是否集群
+func IsCluster() bool {
+	cluster, _ := readconfig.ConfigData.Bool("common::cluster")
+
+	return cluster
 }
