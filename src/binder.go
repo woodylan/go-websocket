@@ -98,7 +98,7 @@ func Send2RabbitMQ(msgType int, objectId, message string) {
 //发送到本机分组
 func (b *binder) SendMessage2LocalGroup(groupName, message string) {
 	if len(groupName) > 0 {
-		clientList := GetGroupList(groupName)
+		clientList := b.GetGroupList(groupName)
 		if len(clientList) > 0 {
 			for _, clientId := range clientList {
 				//发送信息
@@ -109,22 +109,27 @@ func (b *binder) SendMessage2LocalGroup(groupName, message string) {
 	}
 }
 
-func SetGroupList(groupName, clientId string) {
-	//如果是单机的情况
-	//h.binder.groupClientIds[inputData.GroupName] = append(h.binder.groupClientIds[inputData.GroupName], inputData.ClientId)
-
-	_, err := redis.SetAdd(define.REDIS_KEY_GROUP+groupName, clientId)
-	if err != nil {
-		panic(err)
+func (b *binder) SetGroupList(groupName, clientId string) {
+	//如果是集群则用redis共享数据
+	if isCluster() {
+		_, err := redis.SetAdd(define.REDIS_KEY_GROUP+groupName, clientId)
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		//如果是单机，就没比用redis了
+		b.groupClientIds[groupName] = append(b.groupClientIds[groupName], clientId)
 	}
-
 }
 
-func GetGroupList(groupName string) ([]string) {
-	groupList, err := redis.SetMembers(define.REDIS_KEY_GROUP + groupName)
-	if err != nil {
-		panic(err)
+func (b *binder) GetGroupList(groupName string) ([]string) {
+	if isCluster() {
+		groupList, err := redis.SetMembers(define.REDIS_KEY_GROUP + groupName)
+		if err != nil {
+			panic(err)
+		}
+		return groupList
 	}
 
-	return groupList
+	return b.groupClientIds["groupName"]
 }
