@@ -118,9 +118,11 @@ func (b *binder) SendMessage2Client(clientId, message string) {
 
 		//如果是本机则发送到本机
 		if util.IsAddrLocal(host, port) {
+			go fmt.Println("发送到本机客户端：" + clientId + " 消息：" + message)
 			SendMessage2LocalClient(clientId, message)
 		} else {
 			//发送到指定机器
+			go fmt.Println("发送到服务器：" + addr + " 客户端：" + clientId + " 消息：" + message)
 			SendRpc2Client(addr, clientId, message)
 		}
 
