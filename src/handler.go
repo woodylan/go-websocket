@@ -2,7 +2,6 @@ package src
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"go-websocket/tools/util"
 	"log"
@@ -118,7 +117,6 @@ func (wh *WebsocketHandler) SendJump(conn *websocket.Conn) {
 //通过本服务器发送信息
 func SendMessage2LocalClient(clientId, message string) {
 	toClientChan <- [2]string{clientId, message}
-	fmt.Println(clientId, message)
 }
 
 func render(code int, msg string, data interface{}) (str string) {

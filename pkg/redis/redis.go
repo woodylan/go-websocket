@@ -86,7 +86,7 @@ func SetAdd(key, value string) (interface{}, error) {
 }
 
 //返回集合里的元素列表
-func SetMembers(key string) ([]string, error) {
+func SMEMBERS(key string) ([]string, error) {
 	rs, err := connect()
 	if err != nil {
 		return nil, err

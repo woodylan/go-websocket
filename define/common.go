@@ -5,7 +5,7 @@ const (
 	MESSAGE_TYPE_GROUP
 )
 
-const REDIS_KEY_GROUP = "go-websocket-group:"
+const REDIS_KEY_GROUP = "wsGroupList:"
 
 //redis clientId前缀
 const REDIS_CLIENT_ID_PREFIX = "wsClientId:"

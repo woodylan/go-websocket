@@ -73,6 +73,28 @@ func GenRpcPort(port string) string {
 	return strconv.Itoa(iPort + 1000)
 }
 
+//获取group分组key
+func GetGroupKey(groupName string) string {
+	//在redis每个服务都有一个单独的key，用服务器地址(ip:port)区分
+	return define.REDIS_KEY_GROUP + define.LocalHost + ":" + define.RPCPort + ":" + groupName
+}
+
+//获取client key地址信息
+func GetAddrInfoAndIsLocal(clientId string) (addr string, host string, port string, isLocal bool, err error) {
+	addr, err = redis.Get(define.REDIS_CLIENT_ID_PREFIX + clientId)
+	if err != nil {
+		return
+	}
+
+	host, port, err = ParseRedisAddrValue(addr)
+	if err != nil {
+		return
+	}
+
+	isLocal = IsAddrLocal(host, port)
+	return
+}
+
 //获取本机内网IP
 func GetIntranetIp() string {
 	addrs, _ := net.InterfaceAddrs()

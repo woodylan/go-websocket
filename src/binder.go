@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"go-websocket/define"
 	"go-websocket/pkg/redis"
 	"go-websocket/tools/util"
 	"sync"
@@ -77,7 +76,7 @@ func (b *binder) ClientNumber() int {
 func (b *binder) AddClient2Group(groupName, clientId string) {
 	//如果是集群则用redis共享数据
 	if util.IsCluster() {
-		_, err := redis.SetAdd(define.REDIS_KEY_GROUP+groupName, clientId)
+		_, err := redis.SetAdd(util.GetGroupKey(groupName), clientId)
 		if err != nil {
 			panic(err)
 		}
@@ -90,7 +89,7 @@ func (b *binder) AddClient2Group(groupName, clientId string) {
 //获取分组客户端列表
 func (b *binder) GetGroupClientList(groupName string) ([]string) {
 	if util.IsCluster() {
-		groupList, err := redis.SetMembers(define.REDIS_KEY_GROUP + groupName)
+		groupList, err := redis.SMEMBERS(util.GetGroupKey(groupName))
 		if err != nil {
 			panic(err)
 		}
@@ -101,23 +100,16 @@ func (b *binder) GetGroupClientList(groupName string) ([]string) {
 }
 
 //发送信息到指定客户端
-func (b *binder) SendMessage2Client(clientId, message string) {
+func SendMessage2Client(clientId, message string) {
 	if util.IsCluster() {
-		//解析clientId
-		addr, err := redis.Get(define.REDIS_CLIENT_ID_PREFIX + clientId)
-		if err != nil {
-			_ = fmt.Errorf("%s", err)
-			return
-		}
-
-		host, port, err := util.ParseRedisAddrValue(addr)
+		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(clientId)
 		if err != nil {
 			_ = fmt.Errorf("%s", err)
 			return
 		}
 
 		//如果是本机则发送到本机
-		if util.IsAddrLocal(host, port) {
+		if isLocal {
 			go fmt.Println("发送到本机客户端：" + clientId + " 消息：" + message)
 			SendMessage2LocalClient(clientId, message)
 		} else {
@@ -142,7 +134,7 @@ func (b *binder) SendMessage2LocalGroup(groupName, message string) {
 			for _, clientId := range clientList {
 				//发送信息
 				//todo key的销毁
-				SendMessage2LocalClient(clientId, message)
+				SendMessage2Client(clientId, message)
 			}
 		}
 	}
@@ -152,7 +144,7 @@ func (b *binder) SendMessage2LocalGroup(groupName, message string) {
 func (b *binder) SendMessage2Group(groupName, message string) {
 	if util.IsCluster() {
 		//发送到RabbitMQ
-		b.Send2RabbitMQ(define.MESSAGE_TYPE_GROUP, groupName, message)
+		b.Send2RabbitMQ(groupName, message)
 	} else {
 		//如果是单机服务，则只发送到本机
 		b.SendMessage2LocalGroup(groupName, message)
@@ -160,13 +152,12 @@ func (b *binder) SendMessage2Group(groupName, message string) {
 }
 
 //发送到RabbitMQ，方便同步到其他机器
-func (b *binder) Send2RabbitMQ(msgType int, objectId, message string) {
+func (b *binder) Send2RabbitMQ(objectId, message string) {
 	if rabbitMQ == nil {
 		panic("rabbitMQ连接失败")
 	}
 
 	publishMessage := publishMessage{
-		MsgType:  msgType,
 		ObjectId: objectId,
 		Message:  message,
 	}
