@@ -2,6 +2,7 @@ package src
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"go-websocket/define"
 	"go-websocket/pkg/redis"
@@ -102,8 +103,29 @@ func (b *binder) GetGroupClientList(groupName string) ([]string) {
 //发送信息到指定客户端
 func (b *binder) SendMessage2Client(clientId, message string) {
 	if util.IsCluster() {
+		//解析clientId
+		addr, err := redis.Get(define.REDIS_CLIENT_ID_PREFIX + clientId)
+		if err != nil {
+			_ = fmt.Errorf("%s", err)
+			return
+		}
+
+		host, port, err := util.ParseRedisAddrValue(addr)
+		if err != nil {
+			_ = fmt.Errorf("%s", err)
+			return
+		}
+
+		//如果是本机则发送到本机
+		if util.IsAddrLocal(host, port) {
+			SendMessage2LocalClient(clientId, message)
+		} else {
+			//发送到指定机器
+			SendRpc2Client(addr, clientId, message)
+		}
+
 		//发送到RabbitMQ
-		b.Send2RabbitMQ(define.MESSAGE_TYPE_CLIENT, clientId, message)
+		//b.Send2RabbitMQ(define.MESSAGE_TYPE_CLIENT, clientId, message)
 	} else {
 		//如果是单机服务，则只发送到本机
 		SendMessage2LocalClient(clientId, message)

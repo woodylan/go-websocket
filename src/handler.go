@@ -48,7 +48,7 @@ func (wh *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	clientId := util.GenUUID()
+	clientId := util.GenClientId()
 
 	//给客户端绑定ID
 	wh.binder.AddClient(clientId, conn)
