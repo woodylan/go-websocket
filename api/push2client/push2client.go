@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-type Push2ClientHandler struct {
+type Controller struct {
 }
 
 type pushToClientInputData struct {
@@ -16,7 +16,7 @@ type pushToClientInputData struct {
 	Message  string `json:"message"`
 }
 
-func (ph *Push2ClientHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return

@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-type BindGroupHandler struct {
+type Controller struct {
 }
 
 type bindToGroupInputData struct {
@@ -17,7 +17,7 @@ type bindToGroupInputData struct {
 	GroupName string `json:"groupName"`
 }
 
-func (h *BindGroupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return

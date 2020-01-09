@@ -3,19 +3,28 @@ package servers
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"go-websocket/clientvar"
 	"go-websocket/pkg/redis"
 	"go-websocket/tools/util"
+	"log"
+	"time"
 )
+
+// 心跳间隔
+var heartbeatInterval = 10 * time.Second
 
 //channel通道
 var ToClientChan chan [2]string
+
+func init() {
+	ToClientChan = make(chan [2]string, 10)
+}
 
 //通过本服务器发送信息
 func SendMessage2LocalClient(clientId, message string) {
 	ToClientChan <- [2]string{clientId, message}
 }
-
 
 type publishMessage struct {
 	MsgType  int    `json:"type"`     //消息类型 1.指定客户端 2.指定分组
@@ -145,4 +154,39 @@ func Send2RabbitMQ(objectId, message string) {
 	messageByte, _ := json.Marshal(publishMessage)
 
 	rabbitMQ.PublishPub(string(messageByte))
+}
+
+//发送心跳数据
+func SendJump(conn *websocket.Conn) {
+	go func() {
+		for {
+			time.Sleep(heartbeatInterval)
+			if err := conn.WriteJSON("heartbeat"); err != nil {
+				//todo 删除客户端
+				fmt.Printf("删除客户端")
+				return
+			}
+		}
+
+	}()
+}
+
+func WriteMessage() {
+	for {
+		select {
+		case clientInfo := <-ToClientChan:
+			toConn, ok := clientvar.IsAlive(clientInfo[0]);
+			if ok {
+				err := toConn.WriteJSON(clientInfo[1]);
+				if err != nil {
+					go clientvar.DelClient(clientInfo[0])
+					log.Println(err)
+				} else {
+					//todo 给redis续命
+				}
+			} else {
+				go clientvar.DelClient(clientInfo[0])
+			}
+		}
+	}
 }

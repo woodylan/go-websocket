@@ -8,7 +8,7 @@ import (
 	"net/http"
 )
 
-type Push2GroupHandler struct {
+type Controller struct {
 }
 
 type pushToGroupInputData struct {
@@ -16,7 +16,7 @@ type pushToGroupInputData struct {
 	Message   string `json:"message"`
 }
 
-func (b *Push2GroupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
