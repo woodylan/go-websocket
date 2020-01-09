@@ -32,7 +32,7 @@ func initRabbitMQReceive(b *binder) {
 			err := json.Unmarshal([]byte(receiveData.Body), &publishMessage)
 			if err == nil {
 				//发送到指定分组
-				b.SendMessage2LocalGroup(publishMessage.ObjectId, publishMessage.Message)
+				SendMessage2LocalGroup(publishMessage.ObjectId, publishMessage.Message)
 			} else {
 				fmt.Println(err)
 			}

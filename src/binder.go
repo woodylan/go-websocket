@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"go-websocket/define"
+	"go-websocket/clientvar"
 	"go-websocket/pkg/redis"
 	"go-websocket/tools/util"
 	"sync"
@@ -13,9 +13,9 @@ import (
 type binder struct {
 	mu sync.RWMutex
 
-	clintId2ConnMap map[string]*Conn
-	clientGroupsMap map[string][]string
-	groupClientIds  map[string][]string
+	//clintId2ConnMap map[string]*Conn
+	//clientGroupsMap map[string][]string
+	//groupClientIds map[string][]string
 }
 
 type publishMessage struct {
@@ -24,67 +24,14 @@ type publishMessage struct {
 	Message  string `json:"message"`  //消息内容
 }
 
-type IBinder interface {
-	//添加客户端
-	AddClient(clientId string, conn *websocket.Conn)
-	//删除客户端
-	DelClient(clientId string)
-	//客户端数量
-	ClientNumber() int
-	//客户端是否存在
-	IsAlive(clientId string) (conn *Conn, ok bool)
-	//添加客户端到分组
-	AddClient2Group(groupName, clientId string)
-	//获取分组客户端列表
-	GetGroupClientList(groupName string) ([]string)
-	//发送到本机分组
-	SendMessage2LocalGroup(groupName, message string)
-	//发送信息到指定分组
-	SendMessage2Group(groupName, message string)
-	//发送到RabbitMQ，方便同步到其他机器
-	Send2RabbitMQ(objectId, message string)
-}
-
 func NewBinder() *binder {
-	define.ClientGroupsMap = make(map[string][]string, 0);
+	clientvar.ClientGroupsMap = make(map[string][]string, 0);
+	clientvar.ClintId2ConnMap = make(map[string]*websocket.Conn);
+	clientvar.GroupClientIds = make(map[string][]string, 0);
 	return &binder{
-		clintId2ConnMap: make(map[string]*Conn),
 		//clientGroupsMap: make(map[string][]string, 0),
-		groupClientIds: make(map[string][]string, 0),
+		//groupClientIds: make(map[string][]string, 0),
 	}
-}
-
-//给客户端绑定ID
-func (b *binder) AddClient(clientId string, conn *websocket.Conn) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
-	b.clintId2ConnMap[clientId] = &Conn{Conn: conn}
-}
-
-//删除客户端
-func (b *binder) DelClient(clientId string) {
-	delete(b.clintId2ConnMap, clientId)
-	if util.IsCluster() {
-		//todo 删除redis
-		//todo 删除集群里的分组信息
-	} else {
-		//删除单机里的分组
-		define.ClientGroupsMapMu.Lock()
-		defer define.ClientGroupsMapMu.Unlock()
-		delete(define.ClientGroupsMap, clientId)
-	}
-
-}
-
-//客户端数量
-func (b *binder) ClientNumber() int {
-	return len(b.clintId2ConnMap)
-}
-
-//客户端是否存在
-func (b *binder) IsAlive(clientId string) (conn *Conn, ok bool) {
-	conn, ok = b.clintId2ConnMap[clientId];
-	return
 }
 
 //添加分组到本地
@@ -95,14 +42,14 @@ func AddClient2LocalGroup(groupName, clientId string) {
 			panic(err)
 		}
 	} else {
-		define.ClientGroupsMap[clientId] = append(define.ClientGroupsMap[clientId], groupName)
+		clientvar.ClientGroupsMap[clientId] = append(clientvar.ClientGroupsMap[clientId], groupName)
 	}
 	//todo
 	//b.groupClientIds[groupName] = append(b.groupClientIds[groupName], clientId)
 }
 
 //添加客户端到分组
-func (b *binder) AddClient2Group(groupName, clientId string) {
+func AddClient2Group(groupName, clientId string) {
 
 	//如果是集群则用redis共享数据
 	if util.IsCluster() {
@@ -115,7 +62,7 @@ func (b *binder) AddClient2Group(groupName, clientId string) {
 
 		if isLocal {
 			//判断是否已经存在
-			if _, isAlive := b.IsAlive(clientId); !isAlive {
+			if _, isAlive := clientvar.IsAlive(clientId); !isAlive {
 				return
 			}
 			//添加到本地
@@ -131,7 +78,7 @@ func (b *binder) AddClient2Group(groupName, clientId string) {
 }
 
 //获取分组客户端列表
-func (b *binder) GetGroupClientList(groupName string) ([]string) {
+func GetGroupClientList(groupName string) ([]string) {
 	if util.IsCluster() {
 		groupList, err := redis.SMEMBERS(util.GetGroupKey(groupName))
 		if err != nil {
@@ -140,7 +87,7 @@ func (b *binder) GetGroupClientList(groupName string) ([]string) {
 		return groupList
 	}
 
-	return b.groupClientIds[groupName]
+	return clientvar.GetGroupClientIds(groupName)
 }
 
 //发送信息到指定客户端
@@ -171,9 +118,9 @@ func SendMessage2Client(clientId, message string) {
 }
 
 //发送到本机分组
-func (b *binder) SendMessage2LocalGroup(groupName, message string) {
+func SendMessage2LocalGroup(groupName, message string) {
 	if len(groupName) > 0 {
-		clientList := b.GetGroupClientList(groupName)
+		clientList := GetGroupClientList(groupName)
 		if len(clientList) > 0 {
 			for _, clientId := range clientList {
 				//发送信息
@@ -185,10 +132,10 @@ func (b *binder) SendMessage2LocalGroup(groupName, message string) {
 }
 
 //发送信息到指定分组
-func (b *binder) SendMessage2Group(groupName, message string) {
+func SendMessage2Group(groupName, message string) {
 	if util.IsCluster() {
 		//发送到RabbitMQ
-		b.Send2RabbitMQ(groupName, message)
+		Send2RabbitMQ(groupName, message)
 	} else {
 		//如果是单机服务，则只发送到本机
 		SendMessage2LocalClient(groupName, message)
@@ -196,7 +143,7 @@ func (b *binder) SendMessage2Group(groupName, message string) {
 }
 
 //发送到RabbitMQ，方便同步到其他机器
-func (b *binder) Send2RabbitMQ(objectId, message string) {
+func Send2RabbitMQ(objectId, message string) {
 	if rabbitMQ == nil {
 		panic("rabbitMQ连接失败")
 	}

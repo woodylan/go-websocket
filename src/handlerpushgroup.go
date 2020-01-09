@@ -29,7 +29,7 @@ func (b *PushToGroupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	b.binder.SendMessage2Group(inputData.GroupName, inputData.Message)
+	SendMessage2Group(inputData.GroupName, inputData.Message)
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	_, _ = io.WriteString(w, render(0, "success", []string{}))

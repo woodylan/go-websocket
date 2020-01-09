@@ -31,7 +31,7 @@ func (h *BindToGroupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(inputData.ClientId) > 0 && len(inputData.GroupName) > 0 {
-		h.binder.AddClient2Group(inputData.GroupName, inputData.ClientId)
+		AddClient2Group(inputData.GroupName, inputData.ClientId)
 	} else {
 		fmt.Println("参数错误")
 	}

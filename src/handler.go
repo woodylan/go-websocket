@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"go-websocket/clientvar"
 	"go-websocket/tools/util"
 	"log"
 	"net/http"
@@ -51,14 +52,14 @@ func (wh *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	clientId := util.GenClientId()
 
 	//给客户端绑定ID
-	wh.binder.AddClient(clientId, conn)
+	clientvar.AddClient(clientId, conn)
 
 	//返回给客户端
 	if err = conn.WriteJSON(toClient{ClientId: clientId}); err != nil {
 		_ = conn.Close()
 	}
 
-	log.Printf("客户端已连接:%s 总连接数：%d", clientId, wh.binder.ClientNumber())
+	log.Printf("客户端已连接:%s 总连接数：%d", clientId, clientvar.ClientNumber())
 
 	//设置读取消息大小上线
 	conn.SetReadLimit(maxMessageSize)
@@ -94,17 +95,17 @@ func (wh *WebsocketHandler) WriteMessage() {
 	for {
 		select {
 		case clientInfo := <-toClientChan:
-			toConn, ok := wh.binder.IsAlive(clientInfo[0]);
+			toConn, ok := clientvar.IsAlive(clientInfo[0]);
 			if ok {
-				err := toConn.Conn.WriteJSON(clientInfo[1]);
+				err := toConn.WriteJSON(clientInfo[1]);
 				if err != nil {
-					go wh.binder.DelClient(clientInfo[0])
+					go clientvar.DelClient(clientInfo[0])
 					log.Println(err)
 				} else {
 					//todo 给redis续命
 				}
 			} else {
-				go wh.binder.DelClient(clientInfo[0])
+				go clientvar.DelClient(clientInfo[0])
 			}
 		}
 	}
