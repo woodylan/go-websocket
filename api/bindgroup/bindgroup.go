@@ -1,14 +1,15 @@
-package src
+package bindgroup
 
 import (
 	"encoding/json"
 	"fmt"
+	"go-websocket/api"
+	"go-websocket/servers"
 	"io"
 	"net/http"
 )
 
-type BindToGroupHandler struct {
-	binder *binder
+type BindGroupHandler struct {
 }
 
 type bindToGroupInputData struct {
@@ -16,7 +17,7 @@ type bindToGroupInputData struct {
 	GroupName string `json:"groupName"`
 }
 
-func (h *BindToGroupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *BindGroupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -31,11 +32,11 @@ func (h *BindToGroupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(inputData.ClientId) > 0 && len(inputData.GroupName) > 0 {
-		AddClient2Group(inputData.GroupName, inputData.ClientId)
+		servers.AddClient2Group(inputData.GroupName, inputData.ClientId)
 	} else {
 		fmt.Println("参数错误")
 	}
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	_, _ = io.WriteString(w, render(0, "success", []string{}))
+	_, _ = io.WriteString(w, api.Render(0, "success", []string{}))
 }

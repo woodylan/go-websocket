@@ -2,34 +2,56 @@ package main
 
 import (
 	"fmt"
+	"github.com/gorilla/websocket"
+	"go-websocket/clientvar"
 	"go-websocket/define"
-	"go-websocket/src"
+	"go-websocket/routers"
+	"go-websocket/servers"
 	"go-websocket/tools/readconfig"
 	"go-websocket/tools/util"
+	"net/http"
 	"os"
 )
 
 func main() {
 	port := getPort()
-	server := src.NewServer(":" + port)
 
-	//读取配置文件
-	readconfig.ReadConfig()
+	//初始化配置文件
+	readconfig.InitConfig()
 
+	//初始化RPC服务
+	initRPCServer(port)
+
+	//记录本机内网IP地址
+	define.LocalHost = util.GetIntranetIp()
+
+	//如果是集群，则读取初始化RabbitMQ实例
+	if util.IsCluster() {
+		servers.InitRabbitMQ()
+		servers.InitRabbitMQReceive()
+	}
+
+	clientvar.ClientGroupsMap = make(map[string][]string, 0);
+	clientvar.ClintId2ConnMap = make(map[string]*websocket.Conn);
+	clientvar.GroupClientIds = make(map[string][]string, 0);
+
+	//初始化路由
+	routers.Init()
+
+	fmt.Printf("服务器启动成功，端口号：%s\n", port)
+
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		panic(err)
+	}
+}
+
+func initRPCServer(port string) {
 	//如果是集群，则启用RPC进行通讯
 	if util.IsCluster() {
 		//初始化RPC服务
 		rpcPort := util.GenRpcPort(port)
 		fmt.Printf("启动RPC，端口号：%s\n", rpcPort)
-		src.InitRpcServer(rpcPort)
-	}
-
-	//记录本机内网IP地址
-	define.LocalHost = util.GetIntranetIp()
-
-	fmt.Printf("服务器启动成功，端口号：%s\n", port)
-	if err := server.ListenAndServer(); err != nil {
-		panic(err)
+		servers.InitRpcServer(rpcPort)
 	}
 }
 

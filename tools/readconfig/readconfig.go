@@ -6,7 +6,7 @@ import (
 
 var ConfigData config.Configer
 
-func ReadConfig() {
+func InitConfig() {
 	var err error
 
 	ConfigData, err = config.NewConfig("ini", "configs/config.ini")

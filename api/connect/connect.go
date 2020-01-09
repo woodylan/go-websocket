@@ -1,10 +1,10 @@
-package src
+package connect
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"go-websocket/clientvar"
+	"go-websocket/servers"
 	"go-websocket/tools/util"
 	"log"
 	"net/http"
@@ -20,29 +20,22 @@ const (
 )
 
 //channel通道
-var toClientChan chan [2]string
+//var toClientChan chan [2]string
 
 type WebsocketHandler struct {
-	upgrader *websocket.Upgrader
-	binder   *binder
+	Upgrader *websocket.Upgrader
 }
 
 type toClient struct {
 	ClientId string `json:"clientId"`
 }
 
-type RetData struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Date interface{} `json:"data"`
-}
-
 func init() {
-	toClientChan = make(chan [2]string, 10)
+	servers.ToClientChan = make(chan [2]string, 10)
 }
 
 func (wh *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	conn, err := wh.upgrader.Upgrade(w, r, nil)
+	conn, err := wh.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Print("upgrade:", err)
 		return
@@ -74,27 +67,10 @@ func (wh *WebsocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	select {}
 }
 
-//websocket客户端发送消息
-//func (wh *WebsocketHandler) readMessage(conn *websocket.Conn, clientId string) {
-//	for {
-//		var inputData inputData
-//
-//		err := conn.ReadJSON(&inputData)
-//		if err != nil {
-//			log.Printf("read error: %v", err)
-//			//删除这个客户端
-//			wh.binder.DelMap(clientId)
-//			return
-//		}
-//
-//		toClientChan <- [2]string{inputData.ClientId, inputData.Message}
-//	}
-//}
-
 func (wh *WebsocketHandler) WriteMessage() {
 	for {
 		select {
-		case clientInfo := <-toClientChan:
+		case clientInfo := <-servers.ToClientChan:
 			toConn, ok := clientvar.IsAlive(clientInfo[0]);
 			if ok {
 				err := toConn.WriteJSON(clientInfo[1]);
@@ -124,21 +100,4 @@ func (wh *WebsocketHandler) SendJump(conn *websocket.Conn) {
 		}
 
 	}()
-}
-
-//通过本服务器发送信息
-func SendMessage2LocalClient(clientId, message string) {
-	toClientChan <- [2]string{clientId, message}
-}
-
-func render(code int, msg string, data interface{}) (str string) {
-	var retData RetData
-
-	retData.Code = code
-	retData.Msg = msg
-	retData.Date = data
-
-	retJson, _ := json.Marshal(retData)
-	str = string(retJson)
-	return
 }

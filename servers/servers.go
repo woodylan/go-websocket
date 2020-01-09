@@ -1,37 +1,26 @@
-package src
+package servers
 
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"go-websocket/clientvar"
 	"go-websocket/pkg/redis"
 	"go-websocket/tools/util"
-	"sync"
 )
 
-type binder struct {
-	mu sync.RWMutex
+//channel通道
+var ToClientChan chan [2]string
 
-	//clintId2ConnMap map[string]*Conn
-	//clientGroupsMap map[string][]string
-	//groupClientIds map[string][]string
+//通过本服务器发送信息
+func SendMessage2LocalClient(clientId, message string) {
+	ToClientChan <- [2]string{clientId, message}
 }
+
 
 type publishMessage struct {
 	MsgType  int    `json:"type"`     //消息类型 1.指定客户端 2.指定分组
 	ObjectId string `json:"objectId"` //对象ID，如果是client为clientId，如果是分组则为groupId
-	Message  string `json:"message"`  //消息内容
-}
-
-func NewBinder() *binder {
-	clientvar.ClientGroupsMap = make(map[string][]string, 0);
-	clientvar.ClintId2ConnMap = make(map[string]*websocket.Conn);
-	clientvar.GroupClientIds = make(map[string][]string, 0);
-	return &binder{
-		//clientGroupsMap: make(map[string][]string, 0),
-		//groupClientIds: make(map[string][]string, 0),
-	}
+	Message  string `json:"message"`  //消息内容SendRpcBindGroup
 }
 
 //添加分组到本地

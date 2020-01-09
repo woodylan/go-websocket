@@ -1,4 +1,4 @@
-package src
+package servers
 
 import (
 	"encoding/json"
@@ -12,13 +12,13 @@ import (
 var rabbitMQ *rabbitmq.RabbitMQ
 
 //创建rabbitMQ实例
-func initRabbitMQ() {
+func InitRabbitMQ() {
 	rabbitMQ = rabbitmq.NewRabbitMQPubSub(
 		readconfig.ConfigData.String("rabbitMQ::amqpurl"),
 		readconfig.ConfigData.String("rabbitMQ::exchange"))
 }
 
-func initRabbitMQReceive(b *binder) {
+func InitRabbitMQReceive() {
 	msgs, err := rabbitMQ.ReceiveSub()
 	if err != nil {
 		fmt.Println(err)
