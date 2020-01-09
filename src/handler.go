@@ -2,6 +2,7 @@ package src
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"go-websocket/tools/util"
 	"log"
@@ -93,9 +94,17 @@ func (wh *WebsocketHandler) WriteMessage() {
 	for {
 		select {
 		case clientInfo := <-toClientChan:
-			toConn, ok := wh.binder.clintId2ConnMap[clientInfo[0]];
+			toConn, ok := wh.binder.IsAlive(clientInfo[0]);
 			if ok {
-				_ = toConn.Conn.WriteJSON(clientInfo[1]);
+				err := toConn.Conn.WriteJSON(clientInfo[1]);
+				if err != nil {
+					go wh.binder.DelClient(clientInfo[0])
+					log.Println(err)
+				} else {
+					//todo 给redis续命
+				}
+			} else {
+				go wh.binder.DelClient(clientInfo[0])
 			}
 		}
 	}
@@ -107,6 +116,8 @@ func (wh *WebsocketHandler) SendJump(conn *websocket.Conn) {
 		for {
 			time.Sleep(heartbeatInterval)
 			if err := conn.WriteJSON("heartbeat"); err != nil {
+				//todo 删除客户端
+				fmt.Printf("删除客户端")
 				return
 			}
 		}

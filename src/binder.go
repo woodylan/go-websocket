@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"go-websocket/define"
 	"go-websocket/pkg/redis"
 	"go-websocket/tools/util"
 	"sync"
@@ -30,25 +31,26 @@ type IBinder interface {
 	DelClient(clientId string)
 	//客户端数量
 	ClientNumber() int
+	//客户端是否存在
+	IsAlive(clientId string) (conn *Conn, ok bool)
 	//添加客户端到分组
 	AddClient2Group(groupName, clientId string)
 	//获取分组客户端列表
 	GetGroupClientList(groupName string) ([]string)
-	//发送信息到指定客户端
-	SendMessage2Client(clientId, message string)
 	//发送到本机分组
 	SendMessage2LocalGroup(groupName, message string)
 	//发送信息到指定分组
 	SendMessage2Group(groupName, message string)
 	//发送到RabbitMQ，方便同步到其他机器
-	Send2RabbitMQ(msgType int, objectId, message string)
+	Send2RabbitMQ(objectId, message string)
 }
 
 func NewBinder() *binder {
+	define.ClientGroupsMap = make(map[string][]string, 0);
 	return &binder{
 		clintId2ConnMap: make(map[string]*Conn),
-		clientGroupsMap: make(map[string][]string, 0),
-		groupClientIds:  make(map[string][]string, 0),
+		//clientGroupsMap: make(map[string][]string, 0),
+		groupClientIds: make(map[string][]string, 0),
 	}
 }
 
@@ -61,10 +63,17 @@ func (b *binder) AddClient(clientId string, conn *websocket.Conn) {
 
 //删除客户端
 func (b *binder) DelClient(clientId string) {
-	b.mu.Lock()
-	defer b.mu.Unlock()
 	delete(b.clintId2ConnMap, clientId)
-	delete(b.clientGroupsMap, clientId)
+	if util.IsCluster() {
+		//todo 删除redis
+		//todo 删除集群里的分组信息
+	} else {
+		//删除单机里的分组
+		define.ClientGroupsMapMu.Lock()
+		defer define.ClientGroupsMapMu.Unlock()
+		delete(define.ClientGroupsMap, clientId)
+	}
+
 }
 
 //客户端数量
@@ -72,17 +81,52 @@ func (b *binder) ClientNumber() int {
 	return len(b.clintId2ConnMap)
 }
 
-//添加客户端到分组
-func (b *binder) AddClient2Group(groupName, clientId string) {
-	//如果是集群则用redis共享数据
+//客户端是否存在
+func (b *binder) IsAlive(clientId string) (conn *Conn, ok bool) {
+	conn, ok = b.clintId2ConnMap[clientId];
+	return
+}
+
+//添加分组到本地
+func AddClient2LocalGroup(groupName, clientId string) {
 	if util.IsCluster() {
 		_, err := redis.SetAdd(util.GetGroupKey(groupName), clientId)
 		if err != nil {
 			panic(err)
 		}
 	} else {
-		//如果是单机，就没比用redis了
-		b.groupClientIds[groupName] = append(b.groupClientIds[groupName], clientId)
+		define.ClientGroupsMap[clientId] = append(define.ClientGroupsMap[clientId], groupName)
+	}
+	//todo
+	//b.groupClientIds[groupName] = append(b.groupClientIds[groupName], clientId)
+}
+
+//添加客户端到分组
+func (b *binder) AddClient2Group(groupName, clientId string) {
+
+	//如果是集群则用redis共享数据
+	if util.IsCluster() {
+		//判断key是否存在
+		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(clientId)
+		if err != nil {
+			_ = fmt.Errorf("%s", err)
+			return
+		}
+
+		if isLocal {
+			//判断是否已经存在
+			if _, isAlive := b.IsAlive(clientId); !isAlive {
+				return
+			}
+			//添加到本地
+			AddClient2LocalGroup(groupName, clientId)
+		} else {
+			//发送到指定的机器
+			SendRpcBindGroup(addr, groupName, clientId)
+		}
+	} else {
+		//如果是单机，就直接添加到本地group了
+		AddClient2LocalGroup(groupName, clientId)
 	}
 }
 
@@ -147,7 +191,7 @@ func (b *binder) SendMessage2Group(groupName, message string) {
 		b.Send2RabbitMQ(groupName, message)
 	} else {
 		//如果是单机服务，则只发送到本机
-		b.SendMessage2LocalGroup(groupName, message)
+		SendMessage2LocalClient(groupName, message)
 	}
 }
 

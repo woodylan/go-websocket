@@ -31,10 +31,7 @@ func (h *BindToGroupHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(inputData.ClientId) > 0 && len(inputData.GroupName) > 0 {
-		//todo 判断是否已经存在
-
-		h.binder.AddClient2Group(inputData.GroupName,inputData.ClientId)
-		h.binder.clientGroupsMap[inputData.ClientId] = append(h.binder.clientGroupsMap[inputData.ClientId], inputData.GroupName)
+		h.binder.AddClient2Group(inputData.GroupName, inputData.ClientId)
 	} else {
 		fmt.Println("参数错误")
 	}
