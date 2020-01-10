@@ -122,3 +122,14 @@ func SMEMBERS(key string) ([]string, error) {
 		return redis.Strings(reply, err)
 	}
 }
+
+//集合里的元素个数
+func SCARD(key string) (int64, error) {
+	rs, err := connect()
+	if err != nil {
+		return 0, err
+	}
+	defer rs.Close()
+	numString, err := rs.Do("SCARD", key)
+	return numString.(int64), err
+}

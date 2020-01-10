@@ -7,11 +7,15 @@ import (
 	"go-websocket/tools/util"
 	"log"
 	"net/http"
+	"time"
 )
 
 const (
 	// 最大的消息大小
 	maxMessageSize = 8192
+
+	// 心跳间隔
+	heartbeatInterval = 10 * time.Second
 )
 
 type Controller struct {
@@ -56,8 +60,22 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	conn.SetReadLimit(maxMessageSize)
 
 	//发送心跳
-	server.SendJump(clientId, conn)
+	sendJump(clientId, conn)
 
 	//阻塞main线程
 	select {}
+}
+
+//发送心跳数据
+func sendJump(clientId string, conn *websocket.Conn) {
+	go func() {
+		for {
+			time.Sleep(heartbeatInterval)
+			if err := conn.WriteJSON("heartbeat"); err != nil {
+				//删除客户端
+				server.DelClient(clientId)
+				return
+			}
+		}
+	}()
 }

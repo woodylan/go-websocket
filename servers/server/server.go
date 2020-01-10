@@ -3,17 +3,12 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/gorilla/websocket"
 	"go-websocket/define"
 	"go-websocket/pkg/redis"
 	"go-websocket/servers/client"
 	"go-websocket/tools/util"
 	"log"
-	"time"
 )
-
-// 心跳间隔
-var heartbeatInterval = 10 * time.Second
 
 //channel通道
 var ToClientChan chan [2]string
@@ -31,8 +26,16 @@ func init() {
 //添加分组到本地
 func AddClient2LocalGroup(groupName, clientId string) {
 	if util.IsCluster() {
+		groupKey := util.GetGroupKey(groupName)
+		//判断分组是否超过数量限制
+		if clientCount, _ := redis.SCARD(groupKey); clientCount >= define.GROUP_CLIENT_LIMIT {
+			fmt.Println("客户端数量大于限制")
+			//todo 这里需要返回前端错误信息
+			return
+		}
+
 		//添加客户端ID到集合
-		_, err := redis.SetAdd(util.GetGroupKey(groupName), clientId)
+		_, err := redis.SetAdd(groupKey, clientId)
 		if err != nil {
 			panic(err)
 		}
@@ -151,21 +154,6 @@ func Send2RabbitMQ(objectId, message string) {
 	messageByte, _ := json.Marshal(publishMessage)
 
 	rabbitMQ.PublishPub(string(messageByte))
-}
-
-//发送心跳数据
-func SendJump(clientId string, conn *websocket.Conn) {
-	go func() {
-		for {
-			time.Sleep(heartbeatInterval)
-			if err := conn.WriteJSON("heartbeat"); err != nil {
-				//删除客户端
-				DelClient(clientId)
-				return
-			}
-		}
-
-	}()
 }
 
 //删除客户端

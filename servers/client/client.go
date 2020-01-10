@@ -5,17 +5,19 @@ import (
 	"sync"
 )
 
-//连接列表
-var Client2ConnMu sync.RWMutex
-var Clint2ConnMap map[string]*websocket.Conn
+var (
+	//连接列表
+	Client2ConnMu sync.RWMutex
+	Clint2ConnMap map[string]*websocket.Conn
 
-//客户端所属分组列表
-var ClientGroupsMu sync.RWMutex
-var ClientGroupsMap map[string][]string
+	//客户端所属分组列表
+	ClientGroupsMu  sync.RWMutex
+	ClientGroupsMap map[string][]string
 
-//分组里的客户端列表
-var GroupClientIdsMu sync.RWMutex
-var GroupClientIds map[string][]string
+	//分组里的客户端列表
+	GroupClientIdsMu sync.RWMutex
+	GroupClientIds   map[string][]string
+)
 
 //初始化变量
 func Init() {
