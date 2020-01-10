@@ -2,8 +2,8 @@ package connect
 
 import (
 	"github.com/gorilla/websocket"
-	"go-websocket/clientvar"
-	"go-websocket/servers"
+	"go-websocket/servers/client"
+	"go-websocket/servers/server"
 	"go-websocket/tools/util"
 	"log"
 	"net/http"
@@ -43,20 +43,20 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	clientId := util.GenClientId()
 
 	//给客户端绑定ID
-	clientvar.AddClient(clientId, conn)
+	client.AddClient(clientId, conn)
 
 	//返回给客户端
 	if err = conn.WriteJSON(toClient{ClientId: clientId}); err != nil {
 		_ = conn.Close()
 	}
 
-	log.Printf("客户端已连接:%s 总连接数：%d", clientId, clientvar.ClientNumber())
+	log.Printf("客户端已连接:%s 总连接数：%d", clientId, client.ClientNumber())
 
 	//设置读取消息大小上线
 	conn.SetReadLimit(maxMessageSize)
 
 	//发送心跳
-	servers.SendJump(conn)
+	server.SendJump(conn)
 
 	//读取消息并发送 在这不提供
 	//wh.readMessage(conn, clientId)

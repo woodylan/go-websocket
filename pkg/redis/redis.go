@@ -85,6 +85,16 @@ func SetAdd(key, value string) (interface{}, error) {
 	return rs.Do("SADD", key, value)
 }
 
+//删除集合里的某个元素
+func DelSetKey(key, member string) (interface{}, error) {
+	rs, err := connect()
+	if err != nil {
+		return nil, err
+	}
+	defer rs.Close()
+	return rs.Do("SREM", key, member)
+}
+
 //返回集合里的元素列表
 func SMEMBERS(key string) ([]string, error) {
 	rs, err := connect()

@@ -1,24 +1,34 @@
-package servers
+package server
 
 import (
 	"encoding/json"
 	"fmt"
 	"go-websocket/pkg/rabbitmq"
 	"go-websocket/tools/readconfig"
+	"go-websocket/tools/util"
 	"log"
 )
 
 //RabbitMQ 实例
 var rabbitMQ *rabbitmq.RabbitMQ
 
+//初始化rabbitMQ
+func Init()  {
+	//如果是集群，则读取初始化RabbitMQ实例
+	if util.IsCluster() {
+		initRabbitMQ()
+		initRabbitMQReceive()
+	}
+}
+
 //创建rabbitMQ实例
-func InitRabbitMQ() {
+func initRabbitMQ() {
 	rabbitMQ = rabbitmq.NewRabbitMQPubSub(
 		readconfig.ConfigData.String("rabbitMQ::amqpurl"),
 		readconfig.ConfigData.String("rabbitMQ::exchange"))
 }
 
-func InitRabbitMQReceive() {
+func initRabbitMQReceive() {
 	msgs, err := rabbitMQ.ReceiveSub()
 	if err != nil {
 		fmt.Println(err)

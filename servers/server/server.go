@@ -1,11 +1,12 @@
-package servers
+package server
 
 import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
-	"go-websocket/clientvar"
+	"go-websocket/define"
 	"go-websocket/pkg/redis"
+	"go-websocket/servers/client"
 	"go-websocket/tools/util"
 	"log"
 	"time"
@@ -39,11 +40,8 @@ func AddClient2LocalGroup(groupName, clientId string) {
 		if err != nil {
 			panic(err)
 		}
-	} else {
-		clientvar.ClientGroupsMap[clientId] = append(clientvar.ClientGroupsMap[clientId], groupName)
 	}
-	//todo
-	//b.groupClientIds[groupName] = append(b.groupClientIds[groupName], clientId)
+	client.AddClientToGroup(groupName, clientId)
 }
 
 //添加客户端到分组
@@ -60,7 +58,7 @@ func AddClient2Group(groupName, clientId string) {
 
 		if isLocal {
 			//判断是否已经存在
-			if _, isAlive := clientvar.IsAlive(clientId); !isAlive {
+			if _, isAlive := client.IsAlive(clientId); !isAlive {
 				return
 			}
 			//添加到本地
@@ -70,6 +68,10 @@ func AddClient2Group(groupName, clientId string) {
 			SendRpcBindGroup(addr, groupName, clientId)
 		}
 	} else {
+		//判断是否已经存在
+		if _, isAlive := client.IsAlive(clientId); !isAlive {
+			return
+		}
 		//如果是单机，就直接添加到本地group了
 		AddClient2LocalGroup(groupName, clientId)
 	}
@@ -85,7 +87,7 @@ func GetGroupClientList(groupName string) ([]string) {
 		return groupList
 	}
 
-	return clientvar.GetGroupClientIds(groupName)
+	return client.GetGroupClientIds(groupName)
 }
 
 //发送信息到指定客户端
@@ -163,7 +165,6 @@ func SendJump(conn *websocket.Conn) {
 			time.Sleep(heartbeatInterval)
 			if err := conn.WriteJSON("heartbeat"); err != nil {
 				//todo 删除客户端
-				fmt.Printf("删除客户端")
 				return
 			}
 		}
@@ -171,21 +172,42 @@ func SendJump(conn *websocket.Conn) {
 	}()
 }
 
+//删除客户端
+func DelClient(clientId string) {
+	client.DelClient(clientId)
+	if util.IsCluster() {
+		//删除redis里的key
+		_, _ = redis.Del(define.REDIS_CLIENT_ID_PREFIX + clientId)
+
+		//获取key所属的分组
+		groupList := client.GetClientGroups(clientId)
+		for _, groupName := range groupList {
+			//删除集群里的分组信息
+			_, _ = redis.DelSetKey(util.GetGroupKey(groupName), clientId)
+		}
+	}
+
+	//删除客户端里的分组
+	client.DelClientGroup(clientId)
+}
+
+//监听并发送给客户端信息
 func WriteMessage() {
 	for {
 		select {
 		case clientInfo := <-ToClientChan:
-			toConn, ok := clientvar.IsAlive(clientInfo[0]);
+			toConn, ok := client.IsAlive(clientInfo[0]);
 			if ok {
 				err := toConn.WriteJSON(clientInfo[1]);
 				if err != nil {
-					go clientvar.DelClient(clientInfo[0])
+					go DelClient(clientInfo[0])
 					log.Println(err)
 				} else {
 					//todo 给redis续命
 				}
 			} else {
-				go clientvar.DelClient(clientInfo[0])
+				fmt.Println("删")
+				go DelClient(clientInfo[0])
 			}
 		}
 	}

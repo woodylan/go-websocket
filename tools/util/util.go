@@ -62,14 +62,12 @@ func IsAddrLocal(host string, port string) bool {
 //是否集群
 func IsCluster() bool {
 	cluster, _ := readconfig.ConfigData.Bool("common::cluster")
-
 	return cluster
 }
 
 //生成RPC通信端口号，目前是ws端口号+1000
 func GenRpcPort(port string) string {
 	iPort, _ := strconv.Atoi(port)
-
 	return strconv.Itoa(iPort + 1000)
 }
 

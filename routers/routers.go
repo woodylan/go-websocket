@@ -5,7 +5,7 @@ import (
 	"go-websocket/api/connect"
 	"go-websocket/api/push2client"
 	"go-websocket/api/push2group"
-	"go-websocket/servers"
+	"go-websocket/servers/server"
 	"net/http"
 )
 
@@ -20,5 +20,5 @@ func Init() {
 	http.HandleFunc("/push_to_group", pushToGroupHandler.Run)
 	http.HandleFunc("/bind_to_group", bindToGroupHandler.Run)
 
-	go servers.WriteMessage()
+	go server.WriteMessage()
 }

@@ -2,11 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/websocket"
-	"go-websocket/clientvar"
 	"go-websocket/define"
 	"go-websocket/routers"
-	"go-websocket/servers"
+	"go-websocket/servers/client"
+	"go-websocket/servers/server"
 	"go-websocket/tools/readconfig"
 	"go-websocket/tools/util"
 	"net/http"
@@ -25,18 +24,14 @@ func main() {
 	//记录本机内网IP地址
 	define.LocalHost = util.GetIntranetIp()
 
-	//如果是集群，则读取初始化RabbitMQ实例
-	if util.IsCluster() {
-		servers.InitRabbitMQ()
-		servers.InitRabbitMQReceive()
-	}
-
-	clientvar.ClientGroupsMap = make(map[string][]string, 0);
-	clientvar.ClintId2ConnMap = make(map[string]*websocket.Conn);
-	clientvar.GroupClientIds = make(map[string][]string, 0);
+	//初始化rabbitMQ
+	server.Init()
 
 	//初始化路由
 	routers.Init()
+
+	//初始化变量
+	client.Init()
 
 	fmt.Printf("服务器启动成功，端口号：%s\n", port)
 
@@ -51,7 +46,7 @@ func initRPCServer(port string) {
 		//初始化RPC服务
 		rpcPort := util.GenRpcPort(port)
 		fmt.Printf("启动RPC，端口号：%s\n", rpcPort)
-		servers.InitRpcServer(rpcPort)
+		server.InitRpcServer(rpcPort)
 	}
 }
 
