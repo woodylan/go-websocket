@@ -18,19 +18,14 @@ var heartbeatInterval = 10 * time.Second
 //channel通道
 var ToClientChan chan [2]string
 
-func init() {
-	ToClientChan = make(chan [2]string, 10)
-}
-
-//通过本服务器发送信息
-func SendMessage2LocalClient(clientId, message string) {
-	ToClientChan <- [2]string{clientId, message}
-}
-
 type publishMessage struct {
 	MsgType  int    `json:"type"`     //消息类型 1.指定客户端 2.指定分组
 	ObjectId string `json:"objectId"` //对象ID，如果是client为clientId，如果是分组则为groupId
 	Message  string `json:"message"`  //消息内容SendRpcBindGroup
+}
+
+func init() {
+	ToClientChan = make(chan [2]string, 10)
 }
 
 //添加分组到本地
@@ -159,11 +154,13 @@ func Send2RabbitMQ(objectId, message string) {
 }
 
 //发送心跳数据
-func SendJump(conn *websocket.Conn) {
+func SendJump(clientId string, conn *websocket.Conn) {
 	go func() {
 		for {
 			time.Sleep(heartbeatInterval)
 			if err := conn.WriteJSON("heartbeat"); err != nil {
+				//删除客户端
+				DelClient(clientId)
 				return
 			}
 		}
@@ -190,6 +187,11 @@ func DelClient(clientId string) {
 	client.DelClientGroup(clientId)
 }
 
+//通过本服务器发送信息
+func SendMessage2LocalClient(clientId, message string) {
+	ToClientChan <- [2]string{clientId, message}
+}
+
 //监听并发送给客户端信息
 func WriteMessage() {
 	for {
@@ -198,7 +200,6 @@ func WriteMessage() {
 			if toConn, ok := client.IsAlive(clientInfo[0]); ok {
 				err := toConn.WriteJSON(clientInfo[1]);
 				if err != nil {
-					DelClient(clientInfo[0])
 					log.Println(err)
 				} else {
 					//延长key过期时间
@@ -207,8 +208,6 @@ func WriteMessage() {
 						log.Println(err)
 					}
 				}
-			} else {
-				DelClient(clientInfo[0])
 			}
 		}
 	}

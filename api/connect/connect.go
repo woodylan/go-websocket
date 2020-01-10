@@ -56,7 +56,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	conn.SetReadLimit(maxMessageSize)
 
 	//发送心跳
-	server.SendJump(conn)
+	server.SendJump(clientId, conn)
 
 	//阻塞main线程
 	select {}
