@@ -59,11 +59,29 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	//设置读取消息大小上线
 	conn.SetReadLimit(maxMessageSize)
 
+	//读取客户端消息
+	readMessage(conn, clientId)
+
 	//发送心跳
 	sendJump(clientId, conn)
 
 	//阻塞main线程
 	select {}
+}
+
+//websocket客户端发送消息
+func readMessage(conn *websocket.Conn, clientId string) {
+	for {
+		messageType, _, err := conn.ReadMessage()
+		if err != nil {
+			if messageType == -1 || messageType == websocket.CloseMessage {
+				//关闭连接
+				_ = conn.Close()
+				server.DelClient(clientId)
+				return
+			}
+		}
+	}
 }
 
 //发送心跳数据
