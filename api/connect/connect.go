@@ -58,9 +58,6 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	//发送心跳
 	server.SendJump(conn)
 
-	//读取消息并发送 在这不提供
-	//wh.readMessage(conn, clientId)
-
 	//阻塞main线程
 	select {}
 }

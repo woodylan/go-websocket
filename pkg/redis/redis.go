@@ -52,8 +52,8 @@ func Set(key string, value string) (interface{}, error) {
 }
 
 //设置key值加过期时间
-func SetWithSurvivalTime(key string, value string, existTime int) (interface{}, error) {
-	if existTime == 0 {
+func SetWithSurvivalTime(key string, value string, survivalTime int) (interface{}, error) {
+	if survivalTime == 0 {
 		return Set(key, value)
 	}
 
@@ -62,7 +62,20 @@ func SetWithSurvivalTime(key string, value string, existTime int) (interface{}, 
 		return nil, err
 	}
 	defer rs.Close()
-	return rs.Do("SET", key, value, "EX", existTime)
+	return rs.Do("SET", key, value, "EX", survivalTime)
+}
+
+//设置key的过期时间
+func SetSurvivalTime(key string, survivalTime int) (interface{}, error) {
+	if survivalTime < 0 {
+		return nil, nil
+	}
+	rs, err := connect()
+	if err != nil {
+		return nil, err
+	}
+	defer rs.Close()
+	return rs.Do("expire", key, survivalTime)
 }
 
 //删除key值

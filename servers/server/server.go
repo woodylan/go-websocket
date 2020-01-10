@@ -36,7 +36,13 @@ type publishMessage struct {
 //添加分组到本地
 func AddClient2LocalGroup(groupName, clientId string) {
 	if util.IsCluster() {
+		//添加客户端ID到集合
 		_, err := redis.SetAdd(util.GetGroupKey(groupName), clientId)
+		if err != nil {
+			panic(err)
+		}
+		//记录分组列表
+		_, err = redis.SetAdd(define.REDIS_KEY_GROUP_LIST, groupName)
 		if err != nil {
 			panic(err)
 		}
@@ -46,7 +52,6 @@ func AddClient2LocalGroup(groupName, clientId string) {
 
 //添加客户端到分组
 func AddClient2Group(groupName, clientId string) {
-
 	//如果是集群则用redis共享数据
 	if util.IsCluster() {
 		//判断key是否存在
@@ -108,9 +113,6 @@ func SendMessage2Client(clientId, message string) {
 			go fmt.Println("发送到服务器：" + addr + " 客户端：" + clientId + " 消息：" + message)
 			SendRpc2Client(addr, clientId, message)
 		}
-
-		//发送到RabbitMQ
-		//b.Send2RabbitMQ(define.MESSAGE_TYPE_CLIENT, clientId, message)
 	} else {
 		//如果是单机服务，则只发送到本机
 		SendMessage2LocalClient(clientId, message)
@@ -123,8 +125,6 @@ func SendMessage2LocalGroup(groupName, message string) {
 		clientList := GetGroupClientList(groupName)
 		if len(clientList) > 0 {
 			for _, clientId := range clientList {
-				//发送信息
-				//todo key的销毁
 				SendMessage2Client(clientId, message)
 			}
 		}
@@ -164,7 +164,6 @@ func SendJump(conn *websocket.Conn) {
 		for {
 			time.Sleep(heartbeatInterval)
 			if err := conn.WriteJSON("heartbeat"); err != nil {
-				//todo 删除客户端
 				return
 			}
 		}
@@ -196,18 +195,20 @@ func WriteMessage() {
 	for {
 		select {
 		case clientInfo := <-ToClientChan:
-			toConn, ok := client.IsAlive(clientInfo[0]);
-			if ok {
+			if toConn, ok := client.IsAlive(clientInfo[0]); ok {
 				err := toConn.WriteJSON(clientInfo[1]);
 				if err != nil {
-					go DelClient(clientInfo[0])
+					DelClient(clientInfo[0])
 					log.Println(err)
 				} else {
-					//todo 给redis续命
+					//延长key过期时间
+					_, err := redis.SetSurvivalTime(define.REDIS_CLIENT_ID_PREFIX+clientInfo[0], define.REDIS_KEY_SURVIVAL_SECONDS)
+					if (err != nil) {
+						log.Println(err)
+					}
 				}
 			} else {
-				fmt.Println("删")
-				go DelClient(clientInfo[0])
+				DelClient(clientInfo[0])
 			}
 		}
 	}
