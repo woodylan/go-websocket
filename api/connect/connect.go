@@ -54,7 +54,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		_ = conn.Close()
 	}
 
-	log.Printf("客户端已连接:%s 总连接数：%d", clientId, client.ClientNumber())
+	log.Printf("客户端已连接: %s 总连接数：%d", clientId, client.ClientNumber())
 
 	//设置读取消息大小上线
 	conn.SetReadLimit(maxMessageSize)
@@ -78,6 +78,7 @@ func readMessage(conn *websocket.Conn, clientId string) {
 				//关闭连接
 				_ = conn.Close()
 				server.DelClient(clientId)
+				log.Printf("客户端已下线: %s 总连接数：%d", clientId, client.ClientNumber())
 				return
 			}
 		}
@@ -91,7 +92,9 @@ func sendJump(clientId string, conn *websocket.Conn) {
 			time.Sleep(heartbeatInterval)
 			if err := conn.WriteJSON("heartbeat"); err != nil {
 				//删除客户端
+				_ = conn.Close()
 				server.DelClient(clientId)
+				log.Printf("发送心跳失败: %s 总连接数：%d", clientId, client.ClientNumber())
 				return
 			}
 		}
