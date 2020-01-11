@@ -14,9 +14,6 @@ const (
 	maxMessageSize = 8192
 )
 
-// 关闭连接的信号
-var closeSign chan bool
-
 type Controller struct {
 	Upgrader *websocket.Upgrader
 }
@@ -43,8 +40,6 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	closeSign = make(chan bool, 100)
-
 	clientId := util.GenClientId()
 
 	//给客户端绑定ID
@@ -62,6 +57,8 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 
 	//读取客户端消息
 	readMessage(conn, clientId)
+
+	select {}
 }
 
 //websocket客户端发送消息
@@ -74,21 +71,10 @@ func readMessage(conn *websocket.Conn, clientId string) {
 					//关闭连接
 					_ = conn.Close()
 					server.DelClient(clientId)
-					closeSign <- true
 					log.Printf("客户端已下线: %s 总连接数：%d", clientId, client.ClientNumber())
 					return
 				}
 			}
 		}
 	}()
-
-	//接收关闭信号并关闭
-	for {
-		select {
-		case <-closeSign:
-			server.DelClient(clientId)
-			_ = conn.Close()
-			return
-		}
-	}
 }
