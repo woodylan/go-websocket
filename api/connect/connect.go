@@ -18,6 +18,9 @@ const (
 	heartbeatInterval = 10 * time.Second
 )
 
+// 关闭连接的信号
+var closeSign chan bool
+
 type Controller struct {
 	Upgrader *websocket.Upgrader
 }
@@ -44,6 +47,8 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
+	closeMessage = make(chan bool)
+
 	clientId := util.GenClientId()
 
 	//给客户端绑定ID
@@ -64,39 +69,44 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 
 	//发送心跳
 	sendJump(clientId, conn)
-
-	//阻塞main线程
-	select {}
 }
 
 //websocket客户端发送消息
 func readMessage(conn *websocket.Conn, clientId string) {
-	for {
-		messageType, _, err := conn.ReadMessage()
-		if err != nil {
-			if messageType == -1 || messageType == websocket.CloseMessage {
-				//关闭连接
-				_ = conn.Close()
-				server.DelClient(clientId)
-				log.Printf("客户端已下线: %s 总连接数：%d", clientId, client.ClientNumber())
-				return
+	go func() {
+		for {
+			messageType, _, err := conn.ReadMessage()
+			if err != nil {
+				if messageType == -1 || messageType == websocket.CloseMessage {
+					//关闭连接
+					_ = conn.Close()
+					server.DelClient(clientId)
+					closeSign <- true
+					log.Printf("客户端已下线: %s 总连接数：%d", clientId, client.ClientNumber())
+					return
+				}
 			}
 		}
-	}
+	}()
 }
 
 //发送心跳数据
 func sendJump(clientId string, conn *websocket.Conn) {
-	go func() {
-		for {
-			time.Sleep(heartbeatInterval)
-			if err := conn.WriteJSON("heartbeat"); err != nil {
-				//删除客户端
+	ticker := time.NewTicker(heartbeatInterval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(time.Second)); err != nil {
 				_ = conn.Close()
 				server.DelClient(clientId)
 				log.Printf("发送心跳失败: %s 总连接数：%d", clientId, client.ClientNumber())
 				return
 			}
+		case <-closeSign:
+			server.DelClient(clientId)
+			_ = conn.Close()
+			return
 		}
-	}()
+	}
 }
