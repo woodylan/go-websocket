@@ -33,6 +33,9 @@ func main() {
 	//初始化变量
 	client.Init()
 
+	//启动一个定时器用来发送心跳
+	server.PingTimer()
+
 	fmt.Printf("服务器启动成功，端口号：%s\n", port)
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {

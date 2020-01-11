@@ -3,15 +3,20 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"go-websocket/define"
 	"go-websocket/pkg/redis"
 	"go-websocket/servers/client"
 	"go-websocket/tools/util"
 	"log"
+	"time"
 )
 
 //channel通道
 var ToClientChan chan [2]string
+
+// 心跳间隔
+var heartbeatInterval = 10 * time.Second
 
 type publishMessage struct {
 	MsgType  int    `json:"type"`     //消息类型 1.指定客户端 2.指定分组
@@ -136,7 +141,7 @@ func SendMessage2Group(groupName, message string) {
 		Send2RabbitMQ(groupName, message)
 	} else {
 		//如果是单机服务，则只发送到本机
-		SendMessage2LocalClient(groupName, message)
+		SendMessage2LocalGroup(groupName, message)
 	}
 }
 
@@ -173,6 +178,8 @@ func DelClient(clientId string) {
 
 	//删除客户端里的分组
 	client.DelClientGroup(clientId)
+
+	//todo 删除分组里的客户端
 }
 
 //通过本服务器发送信息
@@ -199,4 +206,26 @@ func WriteMessage() {
 			}
 		}
 	}
+}
+
+//启动定时器进行心跳检测
+func PingTimer() {
+	go func() {
+		ticker := time.NewTicker(heartbeatInterval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				//发送心跳
+				for clientId, conn := range client.GetClientList() {
+					if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(10*time.Second)); err != nil {
+						_ = conn.Close()
+						DelClient(clientId)
+						log.Printf("发送心跳失败: %s 总连接数：%d", clientId, client.ClientNumber())
+						return
+					}
+				}
+			}
+		}
+	}()
 }

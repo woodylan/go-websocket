@@ -7,15 +7,11 @@ import (
 	"go-websocket/tools/util"
 	"log"
 	"net/http"
-	"time"
 )
 
 const (
 	// 最大的消息大小
 	maxMessageSize = 8192
-
-	// 心跳间隔
-	heartbeatInterval = 10 * time.Second
 )
 
 // 关闭连接的信号
@@ -47,7 +43,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	closeMessage = make(chan bool)
+	closeSign = make(chan bool, 100)
 
 	clientId := util.GenClientId()
 
@@ -66,9 +62,6 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 
 	//读取客户端消息
 	readMessage(conn, clientId)
-
-	//发送心跳
-	sendJump(clientId, conn)
 }
 
 //websocket客户端发送消息
@@ -88,21 +81,10 @@ func readMessage(conn *websocket.Conn, clientId string) {
 			}
 		}
 	}()
-}
 
-//发送心跳数据
-func sendJump(clientId string, conn *websocket.Conn) {
-	ticker := time.NewTicker(heartbeatInterval)
-	defer ticker.Stop()
+	//接收关闭信号并关闭
 	for {
 		select {
-		case <-ticker.C:
-			if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(time.Second)); err != nil {
-				_ = conn.Close()
-				server.DelClient(clientId)
-				log.Printf("发送心跳失败: %s 总连接数：%d", clientId, client.ClientNumber())
-				return
-			}
 		case <-closeSign:
 			server.DelClient(clientId)
 			_ = conn.Close()

@@ -50,23 +50,29 @@ func DelClientGroup(clientId string) {
 
 //获取分组里的客户端列表
 func GetGroupClientIds(groupName string) ([]string) {
-	GroupClientIdsMu.Lock()
-	defer GroupClientIdsMu.Unlock()
+	GroupClientIdsMu.RLock()
+	defer GroupClientIdsMu.RUnlock()
 	return GroupClientIds[groupName]
 }
 
 //获取客户端分组列表
 func GetClientGroups(clientId string) []string {
+	ClientGroupsMu.RLock()
+	defer ClientGroupsMu.RUnlock()
 	return ClientGroupsMap[clientId]
 }
 
 //客户端数量
 func ClientNumber() int {
+	Client2ConnMu.RLock()
+	defer Client2ConnMu.RUnlock()
 	return len(Clint2ConnMap)
 }
 
 //客户端是否存在
 func IsAlive(clientId string) (conn *websocket.Conn, ok bool) {
+	Client2ConnMu.RLock()
+	defer Client2ConnMu.RUnlock()
 	conn, ok = Clint2ConnMap[clientId];
 	return
 }
@@ -76,4 +82,15 @@ func AddClientToGroup(groupName, clientId string) {
 	ClientGroupsMu.Lock()
 	defer ClientGroupsMu.Unlock()
 	ClientGroupsMap[clientId] = append(ClientGroupsMap[clientId], groupName)
+
+	GroupClientIdsMu.Lock()
+	defer GroupClientIdsMu.Unlock()
+	GroupClientIds[groupName] = append(GroupClientIds[groupName], clientId)
+}
+
+func GetClientList() map[string]*websocket.Conn {
+	Client2ConnMu.RLock()
+	defer Client2ConnMu.RUnlock()
+
+	return Clint2ConnMap
 }
