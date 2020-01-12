@@ -27,25 +27,25 @@ func Init() {
 }
 
 //给客户端绑定ID
-func AddClient(clientId string, conn *websocket.Conn) {
+func AddClient(clientId *string, conn *websocket.Conn) {
 	Client2ConnMu.Lock()
 	defer Client2ConnMu.Unlock()
-	Clint2ConnMap[clientId] = conn
+	Clint2ConnMap[*clientId] = conn
 }
 
 //删除客户端
-func DelClient(clientId string) {
+func DelClient(clientId *string) {
 	Client2ConnMu.Lock()
 	defer Client2ConnMu.Unlock()
-	delete(Clint2ConnMap, clientId)
+	delete(Clint2ConnMap, *clientId)
 
 }
 
 //删除客户端里的分组
-func DelClientGroup(clientId string) {
+func DelClientGroup(clientId *string) {
 	ClientGroupsMu.Lock()
 	defer ClientGroupsMu.Unlock()
-	delete(ClientGroupsMap, clientId)
+	delete(ClientGroupsMap, *clientId)
 }
 
 //获取分组里的客户端列表
@@ -56,10 +56,10 @@ func GetGroupClientIds(groupName string) ([]string) {
 }
 
 //获取客户端分组列表
-func GetClientGroups(clientId string) []string {
+func GetClientGroups(clientId *string) []string {
 	ClientGroupsMu.RLock()
 	defer ClientGroupsMu.RUnlock()
-	return ClientGroupsMap[clientId]
+	return ClientGroupsMap[*clientId]
 }
 
 //客户端数量
@@ -70,27 +70,27 @@ func ClientNumber() int {
 }
 
 //客户端是否存在
-func IsAlive(clientId string) (conn *websocket.Conn, ok bool) {
+func IsAlive(clientId *string) (conn *websocket.Conn, ok bool) {
 	Client2ConnMu.RLock()
 	defer Client2ConnMu.RUnlock()
-	conn, ok = Clint2ConnMap[clientId];
+	conn, ok = Clint2ConnMap[*clientId];
 	return
 }
 
 //添加分组
-func AddClientToGroup(groupName, clientId string) {
+func AddClientToGroup(groupName, clientId *string) {
 	ClientGroupsMu.Lock()
 	defer ClientGroupsMu.Unlock()
-	ClientGroupsMap[clientId] = append(ClientGroupsMap[clientId], groupName)
+	ClientGroupsMap[*clientId] = append(ClientGroupsMap[*clientId], *groupName)
 
 	GroupClientIdsMu.Lock()
 	defer GroupClientIdsMu.Unlock()
-	GroupClientIds[groupName] = append(GroupClientIds[groupName], clientId)
+	GroupClientIds[*groupName] = append(GroupClientIds[*groupName], *clientId)
 }
 
-func GetClientList() map[string]*websocket.Conn {
+func GetClientList() *map[string]*websocket.Conn {
 	Client2ConnMu.RLock()
 	defer Client2ConnMu.RUnlock()
 
-	return Clint2ConnMap
+	return &Clint2ConnMap
 }

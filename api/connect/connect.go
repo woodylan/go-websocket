@@ -43,7 +43,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	clientId := util.GenClientId()
 
 	//给客户端绑定ID
-	client.AddClient(clientId, conn)
+	client.AddClient(&clientId, conn)
 
 	//返回给客户端
 	if err = conn.WriteJSON(toClient{ClientId: clientId}); err != nil {
@@ -56,14 +56,15 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	conn.SetReadLimit(maxMessageSize)
 
 	//读取客户端消息
-	readMessage(conn, clientId)
+	readMessage(conn, &clientId)
 
 	select {}
 }
 
 //websocket客户端发送消息
-func readMessage(conn *websocket.Conn, clientId string) {
+func readMessage(conn *websocket.Conn, clientId *string) {
 	go func() {
+	loop:
 		for {
 			messageType, _, err := conn.ReadMessage()
 			if err != nil {
@@ -71,8 +72,8 @@ func readMessage(conn *websocket.Conn, clientId string) {
 					//关闭连接
 					_ = conn.Close()
 					server.DelClient(clientId)
-					log.Printf("客户端已下线: %s 总连接数：%d", clientId, client.ClientNumber())
-					return
+					log.Printf("客户端已下线: %s 总连接数：%d", *clientId, client.ClientNumber())
+					break loop
 				}
 			}
 		}

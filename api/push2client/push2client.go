@@ -31,7 +31,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//发送信息
-	server.SendMessage2Client(inputData.ClientId, inputData.Message)
+	server.SendMessage2Client(&inputData.ClientId, &inputData.Message)
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	_, _ = io.WriteString(w, api.Render(0, "success", []string{}))

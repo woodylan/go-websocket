@@ -16,7 +16,7 @@ import (
 var ToClientChan chan [2]string
 
 // 心跳间隔
-var heartbeatInterval = 10 * time.Second
+var heartbeatInterval = 25 * time.Second
 
 type publishMessage struct {
 	MsgType  int    `json:"type"`     //消息类型 1.指定客户端 2.指定分组
@@ -29,9 +29,9 @@ func init() {
 }
 
 //添加分组到本地
-func AddClient2LocalGroup(groupName, clientId string) {
+func AddClient2LocalGroup(groupName, clientId *string) {
 	if util.IsCluster() {
-		groupKey := util.GetGroupKey(groupName)
+		groupKey := util.GetGroupKey(*groupName)
 		//判断分组是否超过数量限制
 		if clientCount, _ := redis.SCARD(groupKey); clientCount >= define.GROUP_CLIENT_LIMIT {
 			fmt.Println("客户端数量大于限制")
@@ -40,12 +40,12 @@ func AddClient2LocalGroup(groupName, clientId string) {
 		}
 
 		//添加客户端ID到集合
-		_, err := redis.SetAdd(groupKey, clientId)
+		_, err := redis.SetAdd(groupKey, *clientId)
 		if err != nil {
 			panic(err)
 		}
 		//记录分组列表
-		_, err = redis.SetAdd(define.REDIS_KEY_GROUP_LIST, groupName)
+		_, err = redis.SetAdd(define.REDIS_KEY_GROUP_LIST, *groupName)
 		if err != nil {
 			panic(err)
 		}
@@ -54,11 +54,11 @@ func AddClient2LocalGroup(groupName, clientId string) {
 }
 
 //添加客户端到分组
-func AddClient2Group(groupName, clientId string) {
+func AddClient2Group(groupName, clientId *string) {
 	//如果是集群则用redis共享数据
 	if util.IsCluster() {
 		//判断key是否存在
-		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(clientId)
+		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(*clientId)
 		if err != nil {
 			_ = fmt.Errorf("%s", err)
 			return
@@ -73,7 +73,7 @@ func AddClient2Group(groupName, clientId string) {
 			AddClient2LocalGroup(groupName, clientId)
 		} else {
 			//发送到指定的机器
-			SendRpcBindGroup(addr, groupName, clientId)
+			SendRpcBindGroup(&addr, groupName, clientId)
 		}
 	} else {
 		//判断是否已经存在
@@ -99,9 +99,9 @@ func GetGroupClientList(groupName string) ([]string) {
 }
 
 //发送信息到指定客户端
-func SendMessage2Client(clientId, message string) {
+func SendMessage2Client(clientId, message *string) {
 	if util.IsCluster() {
-		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(clientId)
+		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(*clientId)
 		if err != nil {
 			_ = fmt.Errorf("%s", err)
 			return
@@ -109,11 +109,11 @@ func SendMessage2Client(clientId, message string) {
 
 		//如果是本机则发送到本机
 		if isLocal {
-			go fmt.Println("发送到本机客户端：" + clientId + " 消息：" + message)
+			go fmt.Println("发送到本机客户端：" + *clientId + " 消息：" + *message)
 			SendMessage2LocalClient(clientId, message)
 		} else {
 			//发送到指定机器
-			go fmt.Println("发送到服务器：" + addr + " 客户端：" + clientId + " 消息：" + message)
+			go fmt.Println("发送到服务器：" + addr + " 客户端：" + *clientId + " 消息：" + *message)
 			SendRpc2Client(addr, clientId, message)
 		}
 	} else {
@@ -123,19 +123,19 @@ func SendMessage2Client(clientId, message string) {
 }
 
 //发送到本机分组
-func SendMessage2LocalGroup(groupName, message string) {
-	if len(groupName) > 0 {
-		clientList := GetGroupClientList(groupName)
+func SendMessage2LocalGroup(groupName, message *string) {
+	if len(*groupName) > 0 {
+		clientList := GetGroupClientList(*groupName)
 		if len(clientList) > 0 {
 			for _, clientId := range clientList {
-				SendMessage2Client(clientId, message)
+				SendMessage2Client(&clientId, message)
 			}
 		}
 	}
 }
 
 //发送信息到指定分组
-func SendMessage2Group(groupName, message string) {
+func SendMessage2Group(groupName, message *string) {
 	if util.IsCluster() {
 		//发送到RabbitMQ
 		Send2RabbitMQ(groupName, message)
@@ -146,14 +146,14 @@ func SendMessage2Group(groupName, message string) {
 }
 
 //发送到RabbitMQ，方便同步到其他机器
-func Send2RabbitMQ(objectId, message string) {
+func Send2RabbitMQ(objectId, message *string) {
 	if rabbitMQ == nil {
 		panic("rabbitMQ连接失败")
 	}
 
 	publishMessage := publishMessage{
-		ObjectId: objectId,
-		Message:  message,
+		ObjectId: *objectId,
+		Message:  *message,
 	}
 
 	messageByte, _ := json.Marshal(publishMessage)
@@ -162,17 +162,17 @@ func Send2RabbitMQ(objectId, message string) {
 }
 
 //删除客户端
-func DelClient(clientId string) {
+func DelClient(clientId *string) {
 	client.DelClient(clientId)
 	if util.IsCluster() {
 		//删除redis里的key
-		_, _ = redis.Del(define.REDIS_CLIENT_ID_PREFIX + clientId)
+		_, _ = redis.Del(define.REDIS_CLIENT_ID_PREFIX + *clientId)
 
 		//获取key所属的分组
 		groupList := client.GetClientGroups(clientId)
 		for _, groupName := range groupList {
 			//删除集群里的分组信息
-			_, _ = redis.DelSetKey(util.GetGroupKey(groupName), clientId)
+			_, _ = redis.DelSetKey(util.GetGroupKey(groupName), *clientId)
 		}
 	}
 
@@ -183,8 +183,8 @@ func DelClient(clientId string) {
 }
 
 //通过本服务器发送信息
-func SendMessage2LocalClient(clientId, message string) {
-	ToClientChan <- [2]string{clientId, message}
+func SendMessage2LocalClient(clientId, message *string) {
+	ToClientChan <- [2]string{*clientId, *message}
 }
 
 //监听并发送给客户端信息
@@ -192,7 +192,7 @@ func WriteMessage() {
 	for {
 		select {
 		case clientInfo := <-ToClientChan:
-			if toConn, ok := client.IsAlive(clientInfo[0]); ok {
+			if toConn, ok := client.IsAlive(&clientInfo[0]); ok {
 				err := toConn.WriteJSON(clientInfo[1]);
 				if err != nil {
 					log.Println(err)
@@ -217,10 +217,10 @@ func PingTimer() {
 			select {
 			case <-ticker.C:
 				//发送心跳
-				for clientId, conn := range client.GetClientList() {
+				for clientId, conn := range *client.GetClientList() {
 					if err := conn.WriteControl(websocket.PingMessage, nil, time.Now().Add(10*time.Second)); err != nil {
 						_ = conn.Close()
-						DelClient(clientId)
+						DelClient(&clientId)
 						log.Printf("发送心跳失败: %s 总连接数：%d", clientId, client.ClientNumber())
 						return
 					}
