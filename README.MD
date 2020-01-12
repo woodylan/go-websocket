@@ -10,13 +10,13 @@
 
 ## 使用
 
-### 下载本项目
+**下载本项目：**
 
 ```shell
 git clone https://github.com/woodylan/go-websocket.git
 ```
 
-### 编译
+**编译：**
 
 ```shell
 // 编译适用于本机的版本
@@ -32,7 +32,7 @@ CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build
 CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build
 ```
 
-### 执行
+**执行：**
 
 编译成功之后会得到一个二进制文件`go-websocket`，执行该二进制文件，文件名后面跟着的是端口号，下面的命令`666`则表示端口号，你可以可以改成其他的。
 
@@ -40,7 +40,7 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build
 ./go-websocket 666
 ```
 
-### 连接成功
+**连接测试：**
 
 打开支持Websocket的客户端，输入 `ws://127.0.0.1:666/ws` 进行连接，连接成功会返回`clientId`。
 
@@ -54,15 +54,13 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build
 
 ## 分布式部署
 
-## 安装Redis
+**安装Redis：**参考网上教程
 
-参考网上教程
+**安装RabbitMQ：**参考网上教程
 
-### 安装RabbitMQ
 
-参考网上教程
 
-### 配置文件
+**配置文件：**
 
 配置文件位于项目根目录的`configs/config.ini`，`cluster`为true表示分布式部署，分布式部署[rabbitMQ]、[redis]项必填。
 
@@ -83,11 +81,11 @@ port = 6379
 password =
 ```
 
-### 运行项目
+**运行项目：**
 
 在不同的机器运行本项目，注意配置号端口号，项目如果在同一机器，则必须用不同的端口。你可以用`supervisor`做进程管理。
 
-### 配置Nginx负载均衡
+**配置Nginx负载均衡：**
 
 ```nginx
 upstream ws_cluster {
@@ -122,7 +120,7 @@ server {
 
 ## 接口
 
-### 连接接口
+#### 连接接口
 
 **请求地址：**/ws
 
@@ -140,7 +138,7 @@ server {
 }
 ```
 
-### 发送信息给指定客户端
+#### 发送信息给指定客户端
 
 **请求地址：**/api/send_to_client
 
@@ -167,7 +165,7 @@ server {
 }
 ```
 
-### 绑定客户端到分组
+#### 绑定客户端到分组
 
 **请求地址：**/api/bind_to_group
 
@@ -192,7 +190,7 @@ server {
 }
 ```
 
-### 发送信息给指定分组
+#### 发送信息给指定分组
 
 **请求地址：**/api/send_to_group
 
@@ -231,3 +229,8 @@ server {
 - [ ] 消息记录
 - [ ] 限流
 - [ ] 黑名单
+
+
+
+## 沟通交流
+QQ群：1028314856
