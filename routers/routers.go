@@ -16,9 +16,9 @@ func Init() {
 	bindToGroupHandler := &bindgroup.Controller{}
 
 	http.HandleFunc("/ws", websocketHandler.Run)
-	http.HandleFunc("/send_to_client", pushToClientHandler.Run)
-	http.HandleFunc("/send_to_group", pushToGroupHandler.Run)
-	http.HandleFunc("/bind_to_group", bindToGroupHandler.Run)
+	http.HandleFunc("api/send_to_client", pushToClientHandler.Run)
+	http.HandleFunc("api/send_to_group", pushToGroupHandler.Run)
+	http.HandleFunc("api/bind_to_group", bindToGroupHandler.Run)
 
 	go server.WriteMessage()
 }
