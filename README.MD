@@ -4,6 +4,8 @@
 
 本系统基于Golang、Redis、RabbitMQ、RPC实现分布式WebSocket微服务，也可以单机部署，单机部署不需要Redis、RabbitMQ和RPC。分布式部署可以支持nginx负责均衡、水平扩容部署，程序之间使用RabbitMQ广播、RPC通信。
 
+基本流程为：用ws协议连接本服务，得到一个clientId，由客户端上报这个clinetId给服务端，服务端拿到这个clientId之后，可以给这个客户端发送信息，绑定这个客户端都分组，给分组发送消息。
+
 目前实现的功能有，给指定客户端发送消息、绑定客户端到分组、给分组里的客户端批量发送消息。适用于长连接的大部分场景，分组可以理解为聊天室，绑定客户端到分组相当于把客户端添加到聊天室，给分组发送信息相当于给聊天室的每个人发送消息。
 
 
@@ -54,9 +56,9 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build
 
 ## 分布式部署
 
-**安装Redis：**参考网上教程
+**安装Redis：** 参考网上教程
 
-**安装RabbitMQ：**参考网上教程
+**安装RabbitMQ：** 参考网上教程
 
 
 
@@ -124,7 +126,7 @@ server {
 
 **请求地址：**/ws
 
-**协议：**websocket
+**协议：** websocket
 
 **响应示例：**
 
