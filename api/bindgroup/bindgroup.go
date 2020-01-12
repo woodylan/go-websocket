@@ -12,7 +12,7 @@ import (
 type Controller struct {
 }
 
-type bindToGroupInputData struct {
+type inputData struct {
 	ClientId  string `json:"clientId"`
 	GroupName string `json:"groupName"`
 }
@@ -25,7 +25,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 
 	//解析参数
 	_ = r.ParseForm()
-	var inputData bindToGroupInputData
+	var inputData inputData
 	if err := json.NewDecoder(r.Body).Decode(&inputData); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return

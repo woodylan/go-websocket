@@ -1,4 +1,4 @@
-package push2client
+package send2client
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 type Controller struct {
 }
 
-type pushToClientInputData struct {
+type inputData struct {
 	ClientId string `json:"clientId"`
 	Message  string `json:"message"`
 }
@@ -24,7 +24,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 
 	//解析参数
 	_ = r.ParseForm()
-	var inputData pushToClientInputData
+	var inputData inputData
 	if err := json.NewDecoder(r.Body).Decode(&inputData); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return

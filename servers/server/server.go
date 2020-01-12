@@ -19,9 +19,8 @@ var ToClientChan chan [2]string
 var heartbeatInterval = 25 * time.Second
 
 type publishMessage struct {
-	MsgType  int    `json:"type"`     //消息类型 1.指定客户端 2.指定分组
-	ObjectId string `json:"objectId"` //对象ID，如果是client为clientId，如果是分组则为groupId
-	Message  string `json:"message"`  //消息内容SendRpcBindGroup
+	GroupName string `json:"groupName"`
+	Message   string `json:"message"` //消息内容SendRpcBindGroup
 }
 
 func init() {
@@ -146,14 +145,14 @@ func SendMessage2Group(groupName, message *string) {
 }
 
 //发送到RabbitMQ，方便同步到其他机器
-func Send2RabbitMQ(objectId, message *string) {
+func Send2RabbitMQ(GroupName, message *string) {
 	if rabbitMQ == nil {
 		panic("rabbitMQ连接失败")
 	}
 
 	publishMessage := publishMessage{
-		ObjectId: *objectId,
-		Message:  *message,
+		GroupName: *GroupName,
+		Message:   *message,
 	}
 
 	messageByte, _ := json.Marshal(publishMessage)
