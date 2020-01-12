@@ -2,6 +2,10 @@ package api
 
 import (
 	"encoding/json"
+	"github.com/gorilla/websocket"
+	"go-websocket/define/retcode"
+	"io"
+	"net/http"
 )
 
 type RetData struct {
@@ -10,8 +14,17 @@ type RetData struct {
 	Date interface{} `json:"data"`
 }
 
+func ConnRender(conn *websocket.Conn, date interface{}) (err error) {
+	err = conn.WriteJSON(RetData{
+		Code: retcode.SUCCESS,
+		Msg:  "success",
+		Date: date,
+	})
 
-func Render(code int, msg string, data interface{}) (str string) {
+	return
+}
+
+func Render(w http.ResponseWriter, code int, msg string, data interface{}) (str string) {
 	var retData RetData
 
 	retData.Code = code
@@ -20,6 +33,8 @@ func Render(code int, msg string, data interface{}) (str string) {
 
 	retJson, _ := json.Marshal(retData)
 	str = string(retJson)
+
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	_, _ = io.WriteString(w, str)
 	return
 }
-

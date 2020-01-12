@@ -2,6 +2,7 @@ package connect
 
 import (
 	"github.com/gorilla/websocket"
+	"go-websocket/api"
 	"go-websocket/servers/client"
 	"go-websocket/servers/server"
 	"go-websocket/tools/util"
@@ -18,7 +19,7 @@ type Controller struct {
 	Upgrader *websocket.Upgrader
 }
 
-type toClient struct {
+type renderData struct {
 	ClientId string `json:"clientId"`
 }
 
@@ -46,8 +47,9 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	client.AddClient(&clientId, conn)
 
 	//返回给客户端
-	if err = conn.WriteJSON(toClient{ClientId: clientId}); err != nil {
+	if err = api.ConnRender(conn, renderData{ClientId: clientId}); err != nil {
 		_ = conn.Close()
+		return
 	}
 
 	log.Printf("客户端已连接: %s 总连接数：%d", clientId, client.ClientNumber())
