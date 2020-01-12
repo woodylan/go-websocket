@@ -12,7 +12,9 @@ type RPCServer struct {
 
 type Push2ClientArgs struct {
 	ClientId string
+	Code     int
 	Message  string
+	Data     interface{}
 }
 
 type AddClient2GroupArgs struct {
@@ -25,7 +27,7 @@ type Response struct {
 }
 
 func (s *RPCServer) Push2Client(ctx context.Context, args *Push2ClientArgs, response *Response) error {
-	SendMessage2LocalClient(&args.ClientId, &args.Message)
+	SendMessage2LocalClient(&args.ClientId, args.Code, args.Message, &args.Data)
 	return nil
 }
 

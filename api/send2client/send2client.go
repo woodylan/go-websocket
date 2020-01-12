@@ -1,4 +1,4 @@
-package send2group
+package send2client
 
 import (
 	"encoding/json"
@@ -12,8 +12,10 @@ type Controller struct {
 }
 
 type inputData struct {
-	GroupName string `json:"groupName"`
-	Message   string `json:"message"`
+	ClientId string      `json:"clientId"`
+	Code     int         `json:"code"`
+	Msg      string      `json:"msg"`
+	Data     interface{} `json:"data"`
 }
 
 func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
@@ -30,7 +32,8 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	server.SendMessage2Group(&inputData.GroupName, &inputData.Message)
+	//发送信息
+	server.SendMessage2Client(&inputData.ClientId, inputData.Code, inputData.Msg, &inputData.Data)
 
 	api.Render(w, retcode.SUCCESS, "success", []string{})
 	return

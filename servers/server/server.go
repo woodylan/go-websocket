@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/websocket"
+	"go-websocket/api"
 	"go-websocket/define"
 	"go-websocket/pkg/redis"
 	"go-websocket/servers/client"
@@ -13,18 +14,28 @@ import (
 )
 
 //channel通道
-var ToClientChan chan [2]string
+var ToClientChan chan clientInfo
+
+//channel通道结构体
+type clientInfo struct {
+	ClientId *string
+	Code     int
+	Msg      string
+	Data     *interface{}
+}
 
 // 心跳间隔
 var heartbeatInterval = 25 * time.Second
 
 type publishMessage struct {
-	GroupName string `json:"groupName"`
-	Message   string `json:"message"` //消息内容SendRpcBindGroup
+	GroupName string      `json:"groupName"`
+	Code      int         `json:"code"`
+	Msg       string      `json:"msg"`
+	Data      interface{} `json:"data"`
 }
 
 func init() {
-	ToClientChan = make(chan [2]string, 10)
+	ToClientChan = make(chan clientInfo, 10)
 }
 
 //添加分组到本地
@@ -98,7 +109,7 @@ func GetGroupClientList(groupName string) ([]string) {
 }
 
 //发送信息到指定客户端
-func SendMessage2Client(clientId, message *string) {
+func SendMessage2Client(clientId *string, code int, msg string, data *interface{}) {
 	if util.IsCluster() {
 		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(*clientId)
 		if err != nil {
@@ -108,51 +119,53 @@ func SendMessage2Client(clientId, message *string) {
 
 		//如果是本机则发送到本机
 		if isLocal {
-			go fmt.Println("发送到本机客户端：" + *clientId + " 消息：" + *message)
-			SendMessage2LocalClient(clientId, message)
+			go fmt.Println("发送到本机客户端：" + *clientId + " 消息：" + (*data).(string))
+			SendMessage2LocalClient(clientId, code, msg, data)
 		} else {
 			//发送到指定机器
-			go fmt.Println("发送到服务器：" + addr + " 客户端：" + *clientId + " 消息：" + *message)
-			SendRpc2Client(addr, clientId, message)
+			go fmt.Println("发送到服务器：" + addr + " 客户端：" + *clientId + " 消息：" + (*data).(string))
+			SendRpc2Client(addr, clientId, msg)
 		}
 	} else {
 		//如果是单机服务，则只发送到本机
-		SendMessage2LocalClient(clientId, message)
+		SendMessage2LocalClient(clientId, code, msg, data)
 	}
 }
 
 //发送到本机分组
-func SendMessage2LocalGroup(groupName, message *string) {
+func SendMessage2LocalGroup(groupName *string, code int, msg string, data *interface{}) {
 	if len(*groupName) > 0 {
 		clientList := GetGroupClientList(*groupName)
 		if len(clientList) > 0 {
 			for _, clientId := range clientList {
-				SendMessage2Client(&clientId, message)
+				SendMessage2Client(&clientId, code, msg, data)
 			}
 		}
 	}
 }
 
 //发送信息到指定分组
-func SendMessage2Group(groupName, message *string) {
+func SendMessage2Group(groupName *string, code int, msg string, data *interface{}) {
 	if util.IsCluster() {
 		//发送到RabbitMQ
-		Send2RabbitMQ(groupName, message)
+		Send2RabbitMQ(groupName, code, msg, data)
 	} else {
 		//如果是单机服务，则只发送到本机
-		SendMessage2LocalGroup(groupName, message)
+		SendMessage2LocalGroup(groupName, code, msg, data)
 	}
 }
 
 //发送到RabbitMQ，方便同步到其他机器
-func Send2RabbitMQ(GroupName, message *string) {
+func Send2RabbitMQ(GroupName *string, code int, msg string, data *interface{}) {
 	if rabbitMQ == nil {
 		panic("rabbitMQ连接失败")
 	}
 
 	publishMessage := publishMessage{
 		GroupName: *GroupName,
-		Message:   *message,
+		Code:      code,
+		Msg:       msg,
+		Data:      data,
 	}
 
 	messageByte, _ := json.Marshal(publishMessage)
@@ -182,8 +195,8 @@ func DelClient(clientId *string) {
 }
 
 //通过本服务器发送信息
-func SendMessage2LocalClient(clientId, message *string) {
-	ToClientChan <- [2]string{*clientId, *message}
+func SendMessage2LocalClient(clientId *string, code int, msg string, data *interface{}) {
+	ToClientChan <- clientInfo{ClientId: clientId, Code: code, Msg: msg, Data: data}
 }
 
 //监听并发送给客户端信息
@@ -191,13 +204,14 @@ func WriteMessage() {
 	for {
 		select {
 		case clientInfo := <-ToClientChan:
-			if toConn, ok := client.IsAlive(&clientInfo[0]); ok {
-				err := toConn.WriteJSON(clientInfo[1]);
-				if err != nil {
+			if conn, ok := client.IsAlive(clientInfo.ClientId); ok {
+				if err := Render(conn, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
+					_ = conn.Close()
 					log.Println(err)
+					return
 				} else {
 					//延长key过期时间
-					_, err := redis.SetSurvivalTime(define.REDIS_CLIENT_ID_PREFIX+clientInfo[0], define.REDIS_KEY_SURVIVAL_SECONDS)
+					_, err := redis.SetSurvivalTime(define.REDIS_CLIENT_ID_PREFIX+*clientInfo.ClientId, define.REDIS_KEY_SURVIVAL_SECONDS)
 					if (err != nil) {
 						log.Println(err)
 					}
@@ -205,6 +219,14 @@ func WriteMessage() {
 			}
 		}
 	}
+}
+
+func Render(conn *websocket.Conn, code int, message string, data interface{}) error {
+	return conn.WriteJSON(api.RetData{
+		Code: code,
+		Msg:  message,
+		Data: data,
+	})
 }
 
 //启动定时器进行心跳检测

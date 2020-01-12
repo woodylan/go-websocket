@@ -11,14 +11,14 @@ import (
 type RetData struct {
 	Code int         `json:"code"`
 	Msg  string      `json:"msg"`
-	Date interface{} `json:"data"`
+	Data interface{} `json:"data"`
 }
 
-func ConnRender(conn *websocket.Conn, date interface{}) (err error) {
+func ConnRender(conn *websocket.Conn, data interface{}) (err error) {
 	err = conn.WriteJSON(RetData{
 		Code: retcode.SUCCESS,
 		Msg:  "success",
-		Date: date,
+		Data: data,
 	})
 
 	return
@@ -29,7 +29,7 @@ func Render(w http.ResponseWriter, code int, msg string, data interface{}) (str 
 
 	retData.Code = code
 	retData.Msg = msg
-	retData.Date = data
+	retData.Data = data
 
 	retJson, _ := json.Marshal(retData)
 	str = string(retJson)
