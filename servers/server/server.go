@@ -243,7 +243,6 @@ func PingTimer() {
 						_ = conn.Close()
 						DelClient(&clientId)
 						log.Printf("发送心跳失败: %s 总连接数：%d", clientId, client.ClientNumber())
-						return
 					}
 				}
 			}
