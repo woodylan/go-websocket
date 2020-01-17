@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"go-websocket/api"
 	"go-websocket/define/retcode"
-	"go-websocket/servers/server"
+	"go-websocket/servers"
 	"net/http"
 )
 
@@ -32,7 +32,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	server.SendMessage2Group(&inputData.GroupName, inputData.Code, inputData.Msg, &inputData.Data)
+	servers.SendMessage2Group(&inputData.GroupName, inputData.Code, inputData.Msg, &inputData.Data)
 
 	api.Render(w, retcode.SUCCESS, "success", []string{})
 	return

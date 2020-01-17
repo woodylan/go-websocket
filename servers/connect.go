@@ -1,13 +1,12 @@
-package connect
+package servers
 
 import (
 	"github.com/gorilla/websocket"
 	"go-websocket/api"
-	"go-websocket/servers/client"
-	"go-websocket/servers/server"
 	"go-websocket/tools/util"
 	"log"
 	"net/http"
+	"time"
 )
 
 const (
@@ -42,36 +41,17 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 
 	clientId := util.GenClientId()
 
-	//给客户端绑定ID
-	client.AddClient(&clientId, conn)
+	clientSocket := NewClient(clientId, conn.RemoteAddr().String(), conn, uint64(time.Now().Unix()))
 
-	//返回给客户端
+	//读取客户端消息
+	clientSocket.Read()
+
+
 	if err = api.ConnRender(conn, renderData{ClientId: clientId}); err != nil {
 		_ = conn.Close()
 		return
 	}
 
-	log.Printf("客户端已连接: %s 总连接数：%d", clientId, client.ClientNumber())
-
-	//读取客户端消息
-	readMessage(conn, &clientId)
-}
-
-//websocket客户端发送消息
-func readMessage(conn *websocket.Conn, clientId *string) {
-	go func() {
-	loop:
-		for {
-			messageType, _, err := conn.ReadMessage()
-			if err != nil {
-				if messageType == -1 || messageType == websocket.CloseMessage {
-					//关闭连接
-					_ = conn.Close()
-					server.DelClient(clientId)
-					log.Printf("客户端已下线: %s 总连接数：%d", *clientId, client.ClientNumber())
-					break loop
-				}
-			}
-		}
-	}()
+	// 用户连接事件
+	Manager.Connect <- clientSocket
 }

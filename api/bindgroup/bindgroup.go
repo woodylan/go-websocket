@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"go-websocket/api"
 	"go-websocket/define/retcode"
-	"go-websocket/servers/server"
+	"go-websocket/servers"
 	"net/http"
 )
 
@@ -32,7 +32,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(inputData.ClientId) > 0 && len(inputData.GroupName) > 0 {
-		server.AddClient2Group(&inputData.GroupName, &inputData.ClientId)
+		servers.AddClient2Group(&inputData.GroupName, inputData.ClientId)
 	} else {
 		fmt.Println("参数错误")
 	}

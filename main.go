@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"go-websocket/define"
 	"go-websocket/routers"
-	"go-websocket/servers/client"
-	"go-websocket/servers/server"
+	"go-websocket/servers"
 	"go-websocket/tools/readconfig"
 	"go-websocket/tools/util"
 	"net/http"
@@ -25,16 +24,13 @@ func main() {
 	define.LocalHost = util.GetIntranetIp()
 
 	//初始化rabbitMQ
-	server.Init()
+	servers.InitRabbitMQ()
 
 	//初始化路由
 	routers.Init()
 
-	//初始化变量
-	client.Init()
-
 	//启动一个定时器用来发送心跳
-	server.PingTimer()
+	servers.PingTimer()
 
 	fmt.Printf("服务器启动成功，端口号：%s\n", port)
 
@@ -48,8 +44,8 @@ func initRPCServer(port string) {
 	if util.IsCluster() {
 		//初始化RPC服务
 		rpcPort := util.GenRpcPort(port)
+		servers.InitRpcServer(rpcPort)
 		fmt.Printf("启动RPC，端口号：%s\n", rpcPort)
-		server.InitRpcServer(rpcPort)
 	}
 }
 
