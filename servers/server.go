@@ -35,7 +35,7 @@ type publishMessage struct {
 }
 
 func init() {
-	ToClientChan = make(chan clientInfo, 10)
+	ToClientChan = make(chan clientInfo, 1000)
 }
 
 var Manager = NewClientManager() // 管理者
@@ -58,11 +58,9 @@ func SendMessage2Client(clientId *string, code int, msg string, data *interface{
 
 		//如果是本机则发送到本机
 		if isLocal {
-			go fmt.Println("发送到本机客户端：" + *clientId + " 消息：" + (*data).(string))
 			SendMessage2LocalClient(clientId, code, msg, data)
 		} else {
 			//发送到指定机器
-			go fmt.Println("发送到服务器：" + addr + " 客户端：" + *clientId + " 消息：" + (*data).(string))
 			SendRpc2Client(addr, clientId, msg, data)
 		}
 	} else {
@@ -83,17 +81,21 @@ func AddClient2Group(groupName *string, clientId string) {
 		}
 
 		if isLocal {
-			client := Manager.GetByClientId(clientId)
-			//添加到本地
-			Manager.AddClient2LocalGroup(groupName, client)
+			if client, err := Manager.GetByClientId(clientId); err == nil {
+				//添加到本地
+				Manager.AddClient2LocalGroup(groupName, client)
+			} else {
+				fmt.Println(err)
+			}
 		} else {
 			//发送到指定的机器
 			SendRpcBindGroup(&addr, groupName, &clientId)
 		}
 	} else {
-		client := Manager.GetByClientId(clientId)
-		//如果是单机，就直接添加到本地group了
-		Manager.AddClient2LocalGroup(groupName, client)
+		if client, err := Manager.GetByClientId(clientId); err == nil {
+			//如果是单机，就直接添加到本地group了
+			Manager.AddClient2LocalGroup(groupName, client)
+		};
 	}
 }
 
@@ -136,7 +138,8 @@ func WriteMessage() {
 	for {
 		select {
 		case clientInfo := <-ToClientChan:
-			if conn := Manager.GetByClientId(*clientInfo.ClientId); conn != nil {
+			go fmt.Println("发送到本机客户端：" + *clientInfo.ClientId + " 消息：" + (*clientInfo.Data).(string))
+			if conn, err := Manager.GetByClientId(*clientInfo.ClientId); err == nil && conn != nil {
 				if err := Render(conn.Socket, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
 					_ = conn.Socket.Close()
 					log.Println(err)

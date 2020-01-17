@@ -2,28 +2,26 @@ package servers
 
 import (
 	"github.com/gorilla/websocket"
+	"time"
 )
 
 type Client struct {
-	ClientId      string          // 标识ID
-	Addr          string          // 客户端地址
-	Socket        *websocket.Conn // 用户连接
-	Send          chan []byte     // 待发送的数据
-	AppId         uint32          // 登录的平台Id app/web/ios
-	UserId        string          // 用户Id，用户登录以后才有
-	FirstTime     uint64          // 首次连接事件
-	HeartbeatTime uint64          // 用户上次心跳时间
-	LoginTime     uint64          // 登录时间 登录以后才有
+	ClientId    string          // 标识ID
+	Socket      *websocket.Conn // 用户连接
+	ConnectTime uint64          // 首次连接事件
 }
 
-func NewClient(clientId string, addr string, socket *websocket.Conn, firstTime uint64) (*Client) {
+type SendData struct {
+	Code int
+	Msg  string
+	Data *interface{}
+}
+
+func NewClient(clientId string, socket *websocket.Conn) (*Client) {
 	return &Client{
-		ClientId:      clientId,
-		Addr:          addr,
-		Socket:        socket,
-		Send:          make(chan []byte, 100),
-		FirstTime:     firstTime,
-		HeartbeatTime: firstTime,
+		ClientId:    clientId,
+		Socket:      socket,
+		ConnectTime: uint64(time.Now().Unix()),
 	}
 }
 

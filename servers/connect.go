@@ -41,11 +41,10 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 
 	clientId := util.GenClientId()
 
-	clientSocket := NewClient(clientId, conn.RemoteAddr().String(), conn, uint64(time.Now().Unix()))
+	clientSocket := NewClient(clientId, conn)
 
 	//读取客户端消息
 	clientSocket.Read()
-
 
 	if err = api.ConnRender(conn, renderData{ClientId: clientId}); err != nil {
 		_ = conn.Close()

@@ -27,7 +27,7 @@ type Response struct {
 }
 
 func (s *RPCServer) Push2Client(ctx context.Context, args *Push2ClientArgs, response *Response) error {
-	fmt.Println(args)
+	fmt.Println("接收到RPC消息")
 	SendMessage2LocalClient(&args.ClientId, args.Code, args.Message, &args.Data)
 	return nil
 }
@@ -35,7 +35,6 @@ func (s *RPCServer) Push2Client(ctx context.Context, args *Push2ClientArgs, resp
 //添加分组到group
 func (s *RPCServer) AddClient2Group(ctx context.Context, args *AddClient2GroupArgs, response *Response) error {
 	AddClient2Group(&args.GroupName, args.ClientId)
-	fmt.Printf("添加到分组")
 	return nil
 }
 

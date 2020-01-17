@@ -1,8 +1,10 @@
 package servers
 
 import (
+	"errors"
 	"log"
 	"sync"
+	"time"
 )
 
 // 连接管理
@@ -54,7 +56,7 @@ func (manager *ClientManager) EventDisconnect(client *Client) {
 	//关闭连接
 	_ = client.Socket.Close()
 	manager.DelClient(client)
-	log.Printf("客户端已下线: %s 总连接数：%d", client.ClientId, Manager.Count())
+	log.Printf("客户端已断开: %s 总连接数：%d 连接时间:%d秒 ", client.ClientId, Manager.Count(), uint64(time.Now().Unix())-client.ConnectTime)
 }
 
 // 添加客户端
@@ -91,10 +93,15 @@ func (manager *ClientManager) DelClient(client *Client) {
 }
 
 // 通过clientId获取
-func (manager *ClientManager) GetByClientId(clientId string) (*Client) {
+func (manager *ClientManager) GetByClientId(clientId string) (*Client, error) {
 	manager.ClientIdMapLock.RLock()
 	defer manager.ClientIdMapLock.RUnlock()
-	return manager.ClientIdMap[clientId]
+
+	if client, ok := manager.ClientIdMap[clientId]; !ok {
+		return nil, errors.New("客户端不存在")
+	} else {
+		return client, nil
+	}
 }
 
 // 发送到本机分组

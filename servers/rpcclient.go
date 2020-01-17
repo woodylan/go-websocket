@@ -16,6 +16,7 @@ func SendRpc2Client(addr string, clientId *string, message string, data *interfa
 	XClient := getXClient(addr)
 	defer XClient.Close()
 
+	go fmt.Println("发送到服务器：" + addr + " 客户端：" + *clientId + " 消息：" + (*data).(string))
 	err := XClient.Call(context.Background(), "Push2Client", &Push2ClientArgs{ClientId: *clientId, Message: message, Data: data}, &Response{})
 	if err != nil {
 		_ = fmt.Errorf("failed to call: %v", err)
