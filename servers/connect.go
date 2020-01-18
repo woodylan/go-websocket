@@ -6,7 +6,6 @@ import (
 	"go-websocket/tools/util"
 	"log"
 	"net/http"
-	"time"
 )
 
 const (
