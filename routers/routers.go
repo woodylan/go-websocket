@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"go-websocket/api/bindgroup"
+	"go-websocket/api/bind2group"
 	"go-websocket/api/send2client"
 	"go-websocket/api/send2group"
 	"go-websocket/servers"
@@ -9,12 +9,10 @@ import (
 )
 
 func Init() {
-	//websocketHandler := &connect.Controller{}
 	pushToClientHandler := &send2client.Controller{}
 	pushToGroupHandler := &send2group.Controller{}
-	bindToGroupHandler := &bindgroup.Controller{}
+	bindToGroupHandler := &bind2group.Controller{}
 
-	//http.HandleFunc("/ws", websocketHandler.Run)
 	http.HandleFunc("/api/send_to_client", pushToClientHandler.Run)
 	http.HandleFunc("/api/send_to_group", pushToGroupHandler.Run)
 	http.HandleFunc("/api/bind_to_group", bindToGroupHandler.Run)

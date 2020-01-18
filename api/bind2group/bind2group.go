@@ -1,4 +1,4 @@
-package bindgroup
+package bind2group
 
 import (
 	"encoding/json"
