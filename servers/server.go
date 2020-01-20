@@ -2,6 +2,7 @@ package servers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
 	"go-websocket/api"
@@ -103,7 +104,7 @@ func AddClient2Group(groupName *string, clientId string) {
 func SendMessage2Group(groupName *string, code int, msg string, data *interface{}) {
 	if util.IsCluster() {
 		//发送到RabbitMQ
-		Send2RabbitMQ(groupName, code, msg, data)
+		_ = Send2RabbitMQ(groupName, code, msg, data)
 	} else {
 		//如果是单机服务，则只发送到本机
 		Manager.SendMessage2LocalGroup(groupName, code, msg, data)
@@ -111,9 +112,10 @@ func SendMessage2Group(groupName *string, code int, msg string, data *interface{
 }
 
 //发送到RabbitMQ，方便同步到其他机器
-func Send2RabbitMQ(GroupName *string, code int, msg string, data *interface{}) {
+func Send2RabbitMQ(GroupName *string, code int, msg string, data *interface{}) error {
 	if rabbitMQ == nil {
-		panic("rabbitMQ连接失败")
+		log.Fatal("rabbitMQ连接失败")
+		return errors.New("rabbitMQ连接失败")
 	}
 
 	publishMessage := publishMessage{
@@ -126,6 +128,7 @@ func Send2RabbitMQ(GroupName *string, code int, msg string, data *interface{}) {
 	messageByte, _ := json.Marshal(publishMessage)
 
 	rabbitMQ.PublishPub(string(messageByte))
+	return nil
 }
 
 //通过本服务器发送信息

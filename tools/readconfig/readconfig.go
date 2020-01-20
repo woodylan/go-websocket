@@ -10,11 +10,23 @@ import (
 var ConfigData config.Configer
 
 func InitConfig() (err error) {
+	lasTwoPath := map[string]bool{
+		"readconfig":  true,
+		"send2client": true,
+		"bind2group":  true,
+		"send2group":  true,
+	}
+
 	path, _ := os.Getwd()
-	if strings.Contains(path, "readconfig") {
-		path += "/../.."
-	} else if strings.Contains(path, "servers") {
+	if strings.Contains(path, "servers") {
 		path += "/.."
+	} else {
+		for key, _ := range lasTwoPath {
+			if strings.Contains(path, key) {
+				path += "/../.."
+				break
+			}
+		}
 	}
 	ConfigData, err = config.NewConfig("ini", path+"/configs/config.ini")
 	if err != nil {
