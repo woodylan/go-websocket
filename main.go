@@ -15,7 +15,9 @@ func main() {
 	port := getPort()
 
 	//初始化配置文件
-	readconfig.InitConfig()
+	if err := readconfig.InitConfig(); err != nil {
+		panic(err)
+	}
 
 	//初始化RPC服务
 	initRPCServer(port)

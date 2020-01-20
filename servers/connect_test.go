@@ -2,8 +2,8 @@ package servers
 
 import (
 	"encoding/json"
-	"github.com/astaxie/beego/config"
 	"github.com/gorilla/websocket"
+	. "github.com/smartystreets/goconvey/convey"
 	"go-websocket/tools/readconfig"
 	"net/http"
 	"net/http/httptest"
@@ -29,7 +29,9 @@ type connectData struct {
 func newServer(t *testing.T) *testServer {
 	var s testServer
 
-	readconfig.ConfigData, _ = config.NewConfig("ini", "../configs/config.ini")
+	if err := readconfig.InitConfig(); err != nil {
+		panic(err)
+	}
 
 	websocketHandler := &Controller{}
 	s.Server = httptest.NewServer(http.HandlerFunc(websocketHandler.Run))
@@ -57,18 +59,22 @@ func TestConnect(t *testing.T) {
 		t.FailNow()
 	}
 
-	if render.Code != 0 {
-		t.Error("response Code err")
-		t.FailNow()
-	}
+	Convey("验证json解析返回的内容", t, func() {
+		err := json.Unmarshal(message, &render)
+		Convey("是否解析成功", func() {
+			So(err, ShouldBeNil)
+		})
 
-	if render.Msg != "success" {
-		t.Error("response Msg err")
-		t.FailNow()
-	}
+		Convey("Code格式", func() {
+			So(render.Code, ShouldEqual, 0)
+		})
 
-	if len(render.Data.ClientId) <= 0 {
-		t.Error("client id empty")
-		t.FailNow()
-	}
+		Convey("Msg格式", func() {
+			So(render.Msg, ShouldEqual, "success")
+		})
+
+		Convey("Client长度", func() {
+			So(len(render.Data.ClientId), ShouldBeGreaterThan, 0)
+		})
+	})
 }
