@@ -3,6 +3,7 @@ package send2group
 import (
 	"encoding/json"
 	. "github.com/smartystreets/goconvey/convey"
+	"go-websocket/servers"
 	"go-websocket/tools/readconfig"
 	"io/ioutil"
 	"net/http"
@@ -23,10 +24,11 @@ type retMessage struct {
 
 func newServer(t *testing.T) *testServer {
 	var s testServer
-
 	if err := readconfig.InitConfig(); err != nil {
 		panic(err)
 	}
+
+	servers.InitRabbitMQ()
 
 	controller := &Controller{}
 	s.Server = httptest.NewServer(http.HandlerFunc(controller.Run))
