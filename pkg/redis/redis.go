@@ -133,3 +133,14 @@ func SCARD(key string) (int64, error) {
 	numString, err := rs.Do("SCARD", key)
 	return numString.(int64), err
 }
+
+//判断成员元素是否是集合的成员
+func SISMEMBER(key string, value string) (bool, error) {
+	rs, err := connect()
+	if err != nil {
+		return false, err
+	}
+	defer rs.Close()
+	numInt, err := rs.Do("SISMEMBER", key, value)
+	return numInt.(int64) > 0, err
+}

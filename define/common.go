@@ -15,4 +15,10 @@ const (
 
 	//redis 分组列表key
 	REDIS_KEY_GROUP_LIST = "ws-group-list"
+
+	//账号列表key
+	REDIS_KEY_ACCOUNT_LIST = "ws-account-list"
+
+	//账号前缀
+	REDIS_PREFIX_ACCOUNT_INFO = "ws-account-info:"
 )
