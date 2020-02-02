@@ -17,11 +17,11 @@ func Init() {
 	pushToGroupHandler := &send2group.Controller{}
 	bindToGroupHandler := &bind2group.Controller{}
 
-	http.HandleFunc("/api/send_to_client", pushToClientHandler.Run)
-	http.HandleFunc("/api/send_to_group", pushToGroupHandler.Run)
-	http.HandleFunc("/api/bind_to_group", bindToGroupHandler.Run)
 	http.HandleFunc("/api/register", registerHandler.Run)
 	http.HandleFunc("/api/login", loginHandler.Run)
+	http.HandleFunc("/api/send_to_client", AccessTokenMiddleware(pushToClientHandler.Run))
+	http.HandleFunc("/api/send_to_group", AccessTokenMiddleware(pushToGroupHandler.Run))
+	http.HandleFunc("/api/bind_to_group", AccessTokenMiddleware(bindToGroupHandler.Run))
 
 	servers.StartWebSocket()
 
