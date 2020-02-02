@@ -21,4 +21,7 @@ const (
 
 	//账号前缀
 	REDIS_PREFIX_ACCOUNT_INFO = "ws-account-info:"
+
+	//token前缀
+	REDIS_PREFIX_TOKEN = "ws-token:"
 )

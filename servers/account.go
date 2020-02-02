@@ -3,8 +3,10 @@ package servers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"go-websocket/define"
 	"go-websocket/pkg/redis"
+	"go-websocket/tools/util"
 	"time"
 )
 
@@ -50,4 +52,38 @@ func Register(username string, password string) (err error) {
 	}
 
 	return nil
+}
+
+func Login(username string, password string) (token string, err error) {
+	//校验是否为空
+	if len(username) == 0 || len(password) == 0 {
+		err = errors.New("用户名或密码不能为空")
+		return
+	}
+
+	//判断是否存在
+	jsonValue, err := redis.Get(define.REDIS_PREFIX_ACCOUNT_INFO + username)
+	if err != nil || len(jsonValue) == 0 {
+		err = errors.New("用户名或密码错误")
+		return
+	}
+	accountInfo := accountInfo{}
+
+	_ = json.Unmarshal([]byte(jsonValue), &accountInfo)
+	fmt.Println(accountInfo)
+	if username != accountInfo.Username || password != accountInfo.Password {
+		err = errors.New("用户名或密码错误")
+		return
+	}
+
+	//生成token
+	token = util.GenUUID()
+
+	//存到redis
+	_, err = redis.SetWithSurvivalTime(define.REDIS_PREFIX_TOKEN+token, username, define.REDIS_KEY_SURVIVAL_SECONDS)
+	if err != nil {
+		return "", err
+	}
+
+	return
 }
