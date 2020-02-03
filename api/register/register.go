@@ -12,7 +12,7 @@ type Controller struct {
 }
 
 type inputData struct {
-	Username string `json:"username"`
+	SystemId string `json:"systemId"`
 	Password string `json:"password"`
 }
 
@@ -30,7 +30,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := servers.Register(inputData.Username, inputData.Password)
+	err := servers.Register(inputData.SystemId, inputData.Password)
 	if err != nil {
 		api.Render(w, retcode.FAIL, err.Error(), []string{})
 		return

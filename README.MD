@@ -207,9 +207,11 @@ server {
 
 #### 连接接口
 
-**请求地址：**/ws
+**请求地址：**/ws?systemId=xxx
 
 **协议：** websocket
+
+**请求参数**：systemId 系统ID
 
 **响应示例：**
 
@@ -223,6 +225,58 @@ server {
 }
 ```
 
+#### 注册系统
+
+**请求地址：**/api/register
+
+**请求方式：** POST
+
+**Content-Type：** application/json; charset=UTF-8
+
+**请求头Body**
+
+| 字段     | 类型   | 是否必须 | 说明     |
+| -------- | ------ | -------- | -------- |
+| systemId | string | 是       | 系统ID |
+| password | string | 是       | 密码 |
+
+**响应示例：**
+
+```json
+{
+  "code": 0,
+  "msg": "success",
+  "data": []
+}
+```
+
+#### 登录系统
+
+**请求地址：**/api/login
+
+**请求方式：** POST
+
+**Content-Type：** application/json; charset=UTF-8
+
+**请求头Body**
+
+| 字段     | 类型   | 是否必须 | 说明     |
+| -------- | ------ | -------- | -------- |
+| systemId | string | 是       | 系统ID |
+| password | string | 是       | 密码 |
+
+**响应示例：**
+
+```json
+{
+    "code": 0,
+    "msg": "success",
+    "data": {
+        "token": "04414301b4846e11"
+    }
+}
+```
+
 #### 发送信息给指定客户端
 
 **请求地址：**/api/send_to_client
@@ -230,6 +284,11 @@ server {
 **请求方式：** POST
 
 **Content-Type：** application/json; charset=UTF-8
+
+**请求头Header**
+| 字段     | 类型   | 是否必须 | 说明     |
+| -------- | ------ | -------- | -------- |
+| Token | string | 是       | 授权ID |
 
 **请求头Body**
 
@@ -258,6 +317,11 @@ server {
 
 **Content-Type：** application/json; charset=UTF-8
 
+**请求头Header**
+| 字段     | 类型   | 是否必须 | 说明     |
+| -------- | ------ | -------- | -------- |
+| Token | string | 是       | 授权ID |
+
 **请求头Body**
 
 | 字段     | 类型   | 是否必须 | 说明     |
@@ -283,6 +347,11 @@ server {
 
 **Content-Type：** application/json; charset=UTF-8
 
+**请求头Header**
+| 字段     | 类型   | 是否必须 | 说明     |
+| -------- | ------ | -------- | -------- |
+| Token | string | 是       | 授权ID |
+
 **请求头Body**
 
 | 字段     | 类型   | 是否必须 | 说明     |
@@ -303,17 +372,15 @@ server {
 ```
 
 
-
 ## 实现的功能
 
 - [x] 分布式
-- [ ] 账户授权模式
-- [ ] 日志
-- [ ] 用户绑定客户端功能
-- [ ] 消息持久化
-- [ ] 消息记录
-- [ ] 限流
-- [ ] 黑名单
+- [x] 账户授权模式
+- [x] 不同业务系统隔离
+- [x] 发送给指定客户端
+- [x] 发送给指定分组
+- [ ] 上下线通知
+- [ ] 群广播
 
 
 

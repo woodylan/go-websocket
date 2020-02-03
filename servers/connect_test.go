@@ -43,7 +43,7 @@ func TestConnect(t *testing.T) {
 	s := newServer(t)
 	defer s.Close()
 
-	ws, _, err := websocket.DefaultDialer.Dial(s.ClientURL, nil)
+	ws, _, err := websocket.DefaultDialer.Dial(s.ClientURL+"?systemId=publishSystem", nil)
 	if err != nil {
 		t.Fatalf("Dial: %v", err)
 	}

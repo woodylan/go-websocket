@@ -7,6 +7,7 @@ import (
 
 type Client struct {
 	ClientId    string          // 标识ID
+	SystemId    string          // 系统ID
 	Socket      *websocket.Conn // 用户连接
 	ConnectTime uint64          // 首次连接事件
 }
@@ -17,9 +18,10 @@ type SendData struct {
 	Data *interface{}
 }
 
-func NewClient(clientId string, socket *websocket.Conn) (*Client) {
+func NewClient(clientId string, systemId string, socket *websocket.Conn) (*Client) {
 	return &Client{
 		ClientId:    clientId,
+		SystemId:    systemId,
 		Socket:      socket,
 		ConnectTime: uint64(time.Now().Unix()),
 	}

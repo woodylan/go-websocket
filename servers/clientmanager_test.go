@@ -12,9 +12,10 @@ func newTestManager() {
 
 func TestAddClient(t *testing.T) {
 	clientId := "clientId"
+	systemId := "publishSystem"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
-	clientSocket := NewClient(clientId, conn)
+	clientSocket := NewClient(clientId, systemId, conn)
 
 	manager.AddClient(clientSocket)
 
@@ -32,9 +33,10 @@ func TestAddClient(t *testing.T) {
 
 func TestDelClient(t *testing.T) {
 	clientId := "clientId"
+	systemId := "publishSystem"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
-	clientSocket := NewClient(clientId, conn)
+	clientSocket := NewClient(clientId, systemId, conn)
 	manager.AddClient(clientSocket)
 
 	manager.DelClient(clientSocket)
@@ -53,9 +55,10 @@ func TestDelClient(t *testing.T) {
 
 func TestCount(t *testing.T) {
 	clientId := "clientId"
+	systemId := "publishSystem"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
-	clientSocket := NewClient(clientId, conn)
+	clientSocket := NewClient(clientId, systemId, conn)
 
 	Convey("测试获取客户端数量", t, func() {
 		Convey("添加一个客户端后", func() {
@@ -78,9 +81,10 @@ func TestCount(t *testing.T) {
 
 func TestGetByClientId(t *testing.T) {
 	clientId := "clientId"
+	systemId := "publishSystem"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
-	clientSocket := NewClient(clientId, conn)
+	clientSocket := NewClient(clientId, systemId, conn)
 
 	Convey("测试通过clientId获取客户端", t, func() {
 		Convey("获取一个存在的clientId", func() {
@@ -98,9 +102,10 @@ func TestGetByClientId(t *testing.T) {
 
 func TestAddClient2LocalGroup(t *testing.T) {
 	clientId := "clientId"
+	systemId := "publishSystem"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
-	clientSocket := NewClient(clientId, conn)
+	clientSocket := NewClient(clientId, systemId, conn)
 	manager.AddClient(clientSocket)
 	groupName := "testGroup"
 
@@ -119,9 +124,10 @@ func TestAddClient2LocalGroup(t *testing.T) {
 
 func TestGetGroupClientList(t *testing.T) {
 	clientId := "clientId"
+	systemId := "publishSystem"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
-	clientSocket := NewClient(clientId, conn)
+	clientSocket := NewClient(clientId, systemId, conn)
 	manager.AddClient(clientSocket)
 	groupName := "testGroup"
 

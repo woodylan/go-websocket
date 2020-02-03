@@ -17,14 +17,18 @@ type ClientManager struct {
 
 	GroupLock sync.RWMutex
 	Groups    map[string][]*Client
+
+	SystemClientsLock sync.RWMutex
+	SystemClients     map[string][]*Client
 }
 
 func NewClientManager() (clientManager *ClientManager) {
 	clientManager = &ClientManager{
-		ClientIdMap: make(map[string]*Client),
-		Connect:     make(chan *Client, 1000),
-		DisConnect:  make(chan *Client, 1000),
-		Groups:      make(map[string][]*Client, 100),
+		ClientIdMap:   make(map[string]*Client),
+		Connect:       make(chan *Client, 1000),
+		DisConnect:    make(chan *Client, 1000),
+		Groups:        make(map[string][]*Client, 100),
+		SystemClients: make(map[string][]*Client, 100),
 	}
 
 	return
@@ -128,4 +132,18 @@ func (manager *ClientManager) GetGroupClientList(groupName string) []*Client {
 	manager.GroupLock.RLock()
 	defer manager.GroupLock.RUnlock()
 	return manager.Groups[groupName]
+}
+
+// 添加到系统客户端列表
+func (manager *ClientManager) AddClient2SystemClient(systemId *string, client *Client) {
+	manager.SystemClientsLock.RLock()
+	defer manager.SystemClientsLock.RUnlock()
+	manager.SystemClients[*systemId] = append(manager.SystemClients[*systemId], client)
+}
+
+// 获取指定系统的客户端列表
+func (manager *ClientManager) GetSystemClientList(systemId string) []*Client {
+	manager.SystemClientsLock.RLock()
+	defer manager.SystemClientsLock.RUnlock()
+	return manager.SystemClients[systemId]
 }

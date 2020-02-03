@@ -40,7 +40,7 @@ func TestRun(t *testing.T) {
 	s := newServer(t)
 	defer s.Close()
 
-	testContent := `{"username":"testsystem` + strconv.Itoa(rand.Intn(1000)) + `","password":"password"}`
+	testContent := `{"systemId":"testsystem` + strconv.Itoa(rand.Intn(1000)) + `","password":"password"}`
 
 	resp, err := http.Post(s.ClientURL, "application/json", strings.NewReader(testContent))
 	Convey("测试发送消息给指定客户端", t, func() {
@@ -66,7 +66,7 @@ func TestRun(t *testing.T) {
 		})
 
 		Convey("Msg格式", func() {
-			So(retMessage.Msg, ShouldEqual, "用户名或密码错误")
+			So(retMessage.Msg, ShouldEqual, "系统ID或密码错误")
 		})
 
 	})
