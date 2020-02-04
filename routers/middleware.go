@@ -28,6 +28,7 @@ func AccessTokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			api.Render(w, retcode.FAIL, "token未设置或无效", []string{})
 			return
 		}
+		r.Header.Set("systemName", systemName)
 
 		next.ServeHTTP(w, r)
 	})

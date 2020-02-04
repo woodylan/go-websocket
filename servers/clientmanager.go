@@ -2,6 +2,7 @@ package servers
 
 import (
 	"errors"
+	"go-websocket/tools/util"
 	"log"
 	"sync"
 	"time"
@@ -109,9 +110,9 @@ func (manager *ClientManager) GetByClientId(clientId string) (*Client, error) {
 }
 
 // 发送到本机分组
-func (manager *ClientManager) SendMessage2LocalGroup(groupName *string, code int, msg string, data *interface{}) {
+func (manager *ClientManager) SendMessage2LocalGroup(systemName, groupName *string, code int, msg string, data *interface{}) {
 	if len(*groupName) > 0 {
-		clientList := manager.GetGroupClientList(*groupName)
+		clientList := manager.GetGroupClientList(util.GenGroupKey(*systemName, *groupName))
 		if len(clientList) > 0 {
 			for _, client := range clientList {
 				SendMessage2LocalClient(&client.ClientId, code, msg, data)
@@ -121,17 +122,17 @@ func (manager *ClientManager) SendMessage2LocalGroup(groupName *string, code int
 }
 
 // 添加到本地分组
-func (manager *ClientManager) AddClient2LocalGroup(groupName *string, client *Client) {
+func (manager *ClientManager) AddClient2LocalGroup(groupKey string, client *Client) {
 	manager.GroupLock.RLock()
 	defer manager.GroupLock.RUnlock()
-	manager.Groups[*groupName] = append(manager.Groups[*groupName], client)
+	manager.Groups[groupKey] = append(manager.Groups[groupKey], client)
 }
 
 // 获取本地分组的成员
-func (manager *ClientManager) GetGroupClientList(groupName string) []*Client {
+func (manager *ClientManager) GetGroupClientList(groupKey string) []*Client {
 	manager.GroupLock.RLock()
 	defer manager.GroupLock.RUnlock()
-	return manager.Groups[groupName]
+	return manager.Groups[groupKey]
 }
 
 // 添加到系统客户端列表

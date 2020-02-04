@@ -109,3 +109,7 @@ func GetIntranetIp() string {
 
 	return ""
 }
+
+func GenGroupKey(systemName, groupName string) string {
+	return systemName + ":" + groupName
+}

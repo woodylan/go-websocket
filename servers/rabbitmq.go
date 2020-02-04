@@ -37,7 +37,7 @@ func initRabbitMQReceive() {
 			err := json.Unmarshal([]byte(receiveData.Body), &publishMessage)
 			if err == nil {
 				//发送到指定分组
-				Manager.SendMessage2LocalGroup(&publishMessage.GroupName, publishMessage.Code, publishMessage.Msg, &publishMessage.Data)
+				Manager.SendMessage2LocalGroup(&publishMessage.SystemName, &publishMessage.GroupName, publishMessage.Code, publishMessage.Msg, &publishMessage.Data)
 			} else {
 				fmt.Println(err)
 			}

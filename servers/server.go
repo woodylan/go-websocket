@@ -29,10 +29,11 @@ type clientInfo struct {
 var heartbeatInterval = 25 * time.Second
 
 type publishMessage struct {
-	GroupName string      `json:"groupName"`
-	Code      int         `json:"code"`
-	Msg       string      `json:"msg"`
-	Data      interface{} `json:"data"`
+	SystemName string      `json:"systemName"`
+	GroupName  string      `json:"groupName"`
+	Code       int         `json:"code"`
+	Msg        string      `json:"msg"`
+	Data       interface{} `json:"data"`
 }
 
 func init() {
@@ -71,7 +72,7 @@ func SendMessage2Client(clientId *string, code int, msg string, data *interface{
 }
 
 //添加客户端到分组
-func AddClient2Group(groupName *string, clientId string) {
+func AddClient2Group(systemName *string, groupName *string, clientId string) {
 	//如果是集群则用redis共享数据
 	if util.IsCluster() {
 		//判断key是否存在
@@ -84,45 +85,46 @@ func AddClient2Group(groupName *string, clientId string) {
 		if isLocal {
 			if client, err := Manager.GetByClientId(clientId); err == nil {
 				//添加到本地
-				Manager.AddClient2LocalGroup(groupName, client)
+				Manager.AddClient2LocalGroup(util.GenGroupKey(*systemName, *groupName), client)
 			} else {
 				fmt.Println(err)
 			}
 		} else {
 			//发送到指定的机器
-			SendRpcBindGroup(&addr, groupName, &clientId)
+			SendRpcBindGroup(&addr, systemName, groupName, &clientId)
 		}
 	} else {
 		if client, err := Manager.GetByClientId(clientId); err == nil {
 			//如果是单机，就直接添加到本地group了
-			Manager.AddClient2LocalGroup(groupName, client)
+			Manager.AddClient2LocalGroup(util.GenGroupKey(*systemName, *groupName), client)
 		};
 	}
 }
 
 //发送信息到指定分组
-func SendMessage2Group(groupName *string, code int, msg string, data *interface{}) {
+func SendMessage2Group(systemName, groupName *string, code int, msg string, data *interface{}) {
 	if util.IsCluster() {
 		//发送到RabbitMQ
-		_ = Send2RabbitMQ(groupName, code, msg, data)
+		_ = Send2RabbitMQ(systemName, groupName, code, msg, data)
 	} else {
 		//如果是单机服务，则只发送到本机
-		Manager.SendMessage2LocalGroup(groupName, code, msg, data)
+		Manager.SendMessage2LocalGroup(systemName, groupName, code, msg, data)
 	}
 }
 
 //发送到RabbitMQ，方便同步到其他机器
-func Send2RabbitMQ(GroupName *string, code int, msg string, data *interface{}) error {
+func Send2RabbitMQ(systemName, GroupName *string, code int, msg string, data *interface{}) error {
 	if rabbitMQ == nil {
 		log.Fatal("rabbitMQ连接失败")
 		return errors.New("rabbitMQ连接失败")
 	}
 
 	publishMessage := publishMessage{
-		GroupName: *GroupName,
-		Code:      code,
-		Msg:       msg,
-		Data:      data,
+		SystemName: *systemName,
+		GroupName:  *GroupName,
+		Code:       code,
+		Msg:        msg,
+		Data:       data,
 	}
 
 	messageByte, _ := json.Marshal(publishMessage)

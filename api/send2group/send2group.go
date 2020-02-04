@@ -32,7 +32,8 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	servers.SendMessage2Group(&inputData.GroupName, inputData.Code, inputData.Msg, &inputData.Data)
+	systemName := r.Header.Get("systemName")
+	servers.SendMessage2Group(&systemName, &inputData.GroupName, inputData.Code, inputData.Msg, &inputData.Data)
 
 	api.Render(w, retcode.SUCCESS, "success", []string{})
 	return

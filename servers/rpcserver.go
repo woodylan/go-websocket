@@ -18,8 +18,9 @@ type Push2ClientArgs struct {
 }
 
 type AddClient2GroupArgs struct {
-	GroupName string
-	ClientId  string
+	SystemName string
+	GroupName  string
+	ClientId   string
 }
 
 type Response struct {
@@ -34,7 +35,7 @@ func (s *RPCServer) Push2Client(ctx context.Context, args *Push2ClientArgs, resp
 
 //添加分组到group
 func (s *RPCServer) AddClient2Group(ctx context.Context, args *AddClient2GroupArgs, response *Response) error {
-	AddClient2Group(&args.GroupName, args.ClientId)
+	AddClient2Group(&args.SystemName, &args.GroupName, args.ClientId)
 	return nil
 }
 
