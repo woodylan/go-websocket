@@ -29,11 +29,12 @@ type clientInfo struct {
 var heartbeatInterval = 25 * time.Second
 
 type publishMessage struct {
-	SystemName string      `json:"systemName"`
-	GroupName  string      `json:"groupName"`
-	Code       int         `json:"code"`
-	Msg        string      `json:"msg"`
-	Data       interface{} `json:"data"`
+	Type      int         `json:"type"`
+	SystemId  string      `json:"systemId"`
+	GroupName string      `json:"groupName"`
+	Code      int         `json:"code"`
+	Msg       string      `json:"msg"`
+	Data      interface{} `json:"data"`
 }
 
 func init() {
@@ -72,7 +73,7 @@ func SendMessage2Client(clientId *string, code int, msg string, data *interface{
 }
 
 //添加客户端到分组
-func AddClient2Group(systemName *string, groupName *string, clientId string) {
+func AddClient2Group(systemId *string, groupName *string, clientId string) {
 	//如果是集群则用redis共享数据
 	if util.IsCluster() {
 		//判断key是否存在
@@ -85,46 +86,76 @@ func AddClient2Group(systemName *string, groupName *string, clientId string) {
 		if isLocal {
 			if client, err := Manager.GetByClientId(clientId); err == nil {
 				//添加到本地
-				Manager.AddClient2LocalGroup(util.GenGroupKey(*systemName, *groupName), client)
+				Manager.AddClient2LocalGroup(util.GenGroupKey(*systemId, *groupName), client)
 			} else {
 				fmt.Println(err)
 			}
 		} else {
 			//发送到指定的机器
-			SendRpcBindGroup(&addr, systemName, groupName, &clientId)
+			SendRpcBindGroup(&addr, systemId, groupName, &clientId)
 		}
 	} else {
 		if client, err := Manager.GetByClientId(clientId); err == nil {
 			//如果是单机，就直接添加到本地group了
-			Manager.AddClient2LocalGroup(util.GenGroupKey(*systemName, *groupName), client)
+			Manager.AddClient2LocalGroup(util.GenGroupKey(*systemId, *groupName), client)
 		};
 	}
 }
 
 //发送信息到指定分组
-func SendMessage2Group(systemName, groupName *string, code int, msg string, data *interface{}) {
+func SendMessage2Group(systemId, groupName *string, code int, msg string, data *interface{}) {
 	if util.IsCluster() {
 		//发送到RabbitMQ
-		_ = Send2RabbitMQ(systemName, groupName, code, msg, data)
+		_ = SendGroupMessage2RabbitMQ(systemId, groupName, code, msg, data)
 	} else {
 		//如果是单机服务，则只发送到本机
-		Manager.SendMessage2LocalGroup(systemName, groupName, code, msg, data)
+		Manager.SendMessage2LocalGroup(systemId, groupName, code, msg, data)
+	}
+}
+
+//发送信息到指定系统
+func SendMessage2System(systemId *string, code int, msg string, data interface{}) {
+	if util.IsCluster() {
+		//发送到RabbitMQ
+		_ = SendSystemMessage2RabbitMQ(systemId, code, msg, &data)
+	} else {
+		//如果是单机服务，则只发送到本机
+		Manager.SendMessage2LocalSystem(systemId, code, msg, &data)
 	}
 }
 
 //发送到RabbitMQ，方便同步到其他机器
-func Send2RabbitMQ(systemName, GroupName *string, code int, msg string, data *interface{}) error {
+func SendGroupMessage2RabbitMQ(systemId, GroupName *string, code int, msg string, data *interface{}) error {
+	publishMessage := publishMessage{
+		Type:      define.RPC_MESSAGE_TYPE_GROUP,
+		SystemId:  *systemId,
+		GroupName: *GroupName,
+		Code:      code,
+		Msg:       msg,
+		Data:      data,
+	}
+
+	return send2RabbitMQ(&publishMessage)
+}
+
+//发送系统消息到RabbitMQ
+func SendSystemMessage2RabbitMQ(systemId *string, code int, msg string, data *interface{}) error {
+	publishMessage := publishMessage{
+		Type:      define.RPC_MESSAGE_TYPE_SYSTEM,
+		SystemId:  *systemId,
+		GroupName: "",
+		Code:      code,
+		Msg:       msg,
+		Data:      data,
+	}
+
+	return send2RabbitMQ(&publishMessage)
+}
+
+func send2RabbitMQ(publishMessage *publishMessage) error {
 	if rabbitMQ == nil {
 		log.Fatal("rabbitMQ连接失败")
 		return errors.New("rabbitMQ连接失败")
-	}
-
-	publishMessage := publishMessage{
-		SystemName: *systemName,
-		GroupName:  *GroupName,
-		Code:       code,
-		Msg:        msg,
-		Data:       data,
 	}
 
 	messageByte, _ := json.Marshal(publishMessage)
@@ -143,7 +174,7 @@ func WriteMessage() {
 	for {
 		select {
 		case clientInfo := <-ToClientChan:
-			go fmt.Println("发送到本机客户端：" + *clientInfo.ClientId + " 消息：" + (*clientInfo.Data).(string))
+			fmt.Println("发送到本机客户端：" + *clientInfo.ClientId)
 			if conn, err := Manager.GetByClientId(*clientInfo.ClientId); err == nil && conn != nil {
 				if err := Render(conn.Socket, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
 					_ = conn.Socket.Close()

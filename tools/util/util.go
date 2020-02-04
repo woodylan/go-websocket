@@ -110,6 +110,6 @@ func GetIntranetIp() string {
 	return ""
 }
 
-func GenGroupKey(systemName, groupName string) string {
-	return systemName + ":" + groupName
+func GenGroupKey(systemId, groupName string) string {
+	return systemId + ":" + groupName
 }

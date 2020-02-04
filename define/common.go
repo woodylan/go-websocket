@@ -24,4 +24,8 @@ const (
 
 	//token前缀
 	REDIS_PREFIX_TOKEN = "ws-token:"
+
+	//RPC消息类型
+	RPC_MESSAGE_TYPE_GROUP  = 1; //分组消息
+	RPC_MESSAGE_TYPE_SYSTEM = 2; //系统消息
 )

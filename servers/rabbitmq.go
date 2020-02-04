@@ -3,6 +3,7 @@ package servers
 import (
 	"encoding/json"
 	"fmt"
+	"go-websocket/define"
 	"go-websocket/pkg/rabbitmq"
 	"go-websocket/tools/readconfig"
 	"go-websocket/tools/util"
@@ -36,8 +37,13 @@ func initRabbitMQReceive() {
 			var publishMessage publishMessage
 			err := json.Unmarshal([]byte(receiveData.Body), &publishMessage)
 			if err == nil {
-				//发送到指定分组
-				Manager.SendMessage2LocalGroup(&publishMessage.SystemName, &publishMessage.GroupName, publishMessage.Code, publishMessage.Msg, &publishMessage.Data)
+				if publishMessage.Type == define.RPC_MESSAGE_TYPE_GROUP {
+					//发送到指定分组
+					Manager.SendMessage2LocalGroup(&publishMessage.SystemId, &publishMessage.GroupName, publishMessage.Code, publishMessage.Msg, &publishMessage.Data)
+				} else if publishMessage.Type == define.RPC_MESSAGE_TYPE_SYSTEM {
+					Manager.SendMessage2LocalSystem(&publishMessage.SystemId, publishMessage.Code, publishMessage.Msg, &publishMessage.Data)
+				}
+
 			} else {
 				fmt.Println(err)
 			}

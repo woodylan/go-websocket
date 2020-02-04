@@ -23,11 +23,11 @@ func SendRpc2Client(addr string, clientId *string, message string, data *interfa
 	}
 }
 
-func SendRpcBindGroup(addr *string, systemName *string, groupName *string, clientId *string) {
+func SendRpcBindGroup(addr *string, systemId *string, groupName *string, clientId *string) {
 	XClient := getXClient(*addr)
 	defer XClient.Close()
 
-	err := XClient.Call(context.Background(), "AddClient2Group", &AddClient2GroupArgs{SystemName: *systemName, GroupName: *groupName, ClientId: *clientId}, &Response{})
+	err := XClient.Call(context.Background(), "AddClient2Group", &AddClient2GroupArgs{SystemId: *systemId, GroupName: *groupName, ClientId: *clientId}, &Response{})
 	if err != nil {
 		_ = fmt.Errorf("failed to call: %v", err)
 	}

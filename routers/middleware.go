@@ -18,17 +18,17 @@ func AccessTokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		//校验token是否合格
-		systemName, err := redis.Get(define.REDIS_PREFIX_TOKEN + token)
+		systemId, err := redis.Get(define.REDIS_PREFIX_TOKEN + token)
 		if err != nil {
 			api.Render(w, retcode.FAIL, "redis服务器错误", []string{})
 			return
 		}
 
-		if len(systemName) == 0 {
+		if len(systemId) == 0 {
 			api.Render(w, retcode.FAIL, "token未设置或无效", []string{})
 			return
 		}
-		r.Header.Set("systemName", systemName)
+		r.Header.Set("systemId", systemId)
 
 		next.ServeHTTP(w, r)
 	})

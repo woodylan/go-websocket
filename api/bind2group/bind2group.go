@@ -32,8 +32,8 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(inputData.ClientId) > 0 && len(inputData.GroupName) > 0 {
-		systemName := r.Header.Get("systemName")
-		servers.AddClient2Group(&systemName, &inputData.GroupName, inputData.ClientId)
+		systemId := r.Header.Get("systemId")
+		servers.AddClient2Group(&systemId, &inputData.GroupName, inputData.ClientId)
 	} else {
 		fmt.Println("参数错误")
 	}
