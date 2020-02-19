@@ -3,7 +3,6 @@ package util
 import (
 	"github.com/astaxie/beego/config"
 	. "github.com/smartystreets/goconvey/convey"
-	"go-websocket/define"
 	"go-websocket/tools/readconfig"
 	"testing"
 )
@@ -14,14 +13,6 @@ func TestGenUUID(t *testing.T) {
 		Convey("验证长度", func() {
 			So(len(uuid), ShouldBeGreaterThan, 0)
 		})
-	})
-}
-
-func TestToRedisAddrValue(t *testing.T) {
-	Convey("验证生成redis key", t, func() {
-		define.LocalHost = "127.0.0.1"
-		define.RPCPort = "8081"
-		So(toRedisAddrValue(), ShouldEqual, "127.0.0.1:8081")
 	})
 }
 

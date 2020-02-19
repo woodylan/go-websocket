@@ -4,7 +4,7 @@ import (
 	"errors"
 	uuid "github.com/satori/go.uuid"
 	"go-websocket/define"
-	"go-websocket/pkg/redis"
+	"go-websocket/tools/crypto"
 	"go-websocket/tools/readconfig"
 	"net"
 	"strconv"
@@ -20,22 +20,16 @@ func GenUUID() string {
 	return string(uuidByt[8:24])
 }
 
-//生成uuid后，如果是集群，则需要存入redis，方便查看key属于哪个IP、端口
+//对称加密IP和端口，当做clientId
 func GenClientId() string {
-	clientId := GenUUID()
-	//如果是集群，则需要存入redis
-	if IsCluster() {
-		_, err := redis.SetWithSurvivalTime(define.REDIS_CLIENT_ID_PREFIX+clientId, toRedisAddrValue(), define.REDIS_KEY_SURVIVAL_SECONDS)
-		if err != nil {
-			panic(err)
-		}
+	raw := []byte(define.LocalHost + ":" + define.RPCPort)
+	key := readconfig.ConfigData.String("common::crypto_key")
+	str, err := crypto.Encrypt(raw, []byte(key))
+	if err != nil {
+		panic(err)
 	}
-	return clientId
-}
 
-//处理储存到redis的地址格式，用","分割保存
-func toRedisAddrValue() string {
-	return define.LocalHost + ":" + define.RPCPort
+	return str
 }
 
 //解析redis的地址格式
@@ -79,7 +73,10 @@ func GetGroupKey(groupName string) string {
 
 //获取client key地址信息
 func GetAddrInfoAndIsLocal(clientId string) (addr string, host string, port string, isLocal bool, err error) {
-	addr, err = redis.Get(define.REDIS_CLIENT_ID_PREFIX + clientId)
+	//解密ClientId
+	key := readconfig.ConfigData.String("common::crypto_key")
+
+	addr, err = crypto.Decrypt(clientId, []byte(key))
 	if err != nil {
 		return
 	}
