@@ -19,6 +19,9 @@ const (
 	//账号列表key
 	REDIS_KEY_ACCOUNT_LIST = "ws-account-list"
 
+	//服务器列表
+	REDIS_KEY_SERVER_LIST = "ws-server-list"
+
 	//账号前缀
 	REDIS_PREFIX_ACCOUNT_INFO = "ws-account-info:"
 

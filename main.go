@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"go-websocket/define"
+	"go-websocket/pkg/redis"
 	"go-websocket/routers"
 	"go-websocket/servers"
 	"go-websocket/tools/readconfig"
@@ -25,6 +26,9 @@ func main() {
 	//记录本机内网IP地址
 	define.LocalHost = util.GetIntranetIp()
 
+	//将服务器地址、端口注册到redis中
+	registerServer()
+
 	//初始化路由
 	routers.Init()
 
@@ -45,6 +49,16 @@ func initRPCServer(port string) {
 		rpcPort := util.GenRpcPort(port)
 		servers.InitRpcServer(rpcPort)
 		fmt.Printf("启动RPC，端口号：%s\n", rpcPort)
+	}
+}
+
+//将服务器地址、端口注册到redis中
+func registerServer() {
+	if util.IsCluster() {
+		_, err := redis.SetAdd(define.REDIS_KEY_SERVER_LIST, define.LocalHost+":"+define.RPCPort)
+		if err != nil {
+			panic(err)
+		}
 	}
 }
 

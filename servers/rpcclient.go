@@ -4,13 +4,26 @@ import (
 	"context"
 	"fmt"
 	"github.com/smallnest/rpcx/client"
+	"go-websocket/define"
+	"go-websocket/pkg/redis"
 )
 
 //客户端列表
 func getServerList() []*client.KVPair {
-	return []*client.KVPair{
-		{Key: "127.0.0.1:8777"},
-		{Key: "127.0.0.1:8778"}}
+	serverList, err := redis.SMEMBERS(define.REDIS_KEY_SERVER_LIST)
+	if err != nil {
+		_ = fmt.Errorf("failed to get server list: %v", err)
+		return []*client.KVPair{
+			{Key: define.LocalHost + ":" + define.RPCPort},
+		}
+	}
+
+	var clientList []*client.KVPair
+	for _, host := range serverList {
+		clientList = append(clientList, &client.KVPair{Key: host})
+	}
+
+	return clientList
 }
 
 //获取单台客户端
