@@ -26,15 +26,6 @@ type clientInfo struct {
 // 心跳间隔
 var heartbeatInterval = 25 * time.Second
 
-type publishMessage struct {
-	Type      int         `json:"type"`
-	SystemId  string      `json:"systemId"`
-	GroupName string      `json:"groupName"`
-	Code      int         `json:"code"`
-	Msg       string      `json:"msg"`
-	Data      interface{} `json:"data"`
-}
-
 func init() {
 	ToClientChan = make(chan clientInfo, 1000)
 }
