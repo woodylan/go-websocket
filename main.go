@@ -25,9 +25,6 @@ func main() {
 	//记录本机内网IP地址
 	define.LocalHost = util.GetIntranetIp()
 
-	//初始化rabbitMQ
-	servers.InitRabbitMQ()
-
 	//初始化路由
 	routers.Init()
 

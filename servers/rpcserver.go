@@ -17,10 +17,25 @@ type Push2ClientArgs struct {
 	Data     interface{}
 }
 
-type AddClient2GroupArgs struct {
+type Push2GroupArgs struct {
+	SystemId  string
+	GroupName string
+	Code      int
+	Message   string
+	Data      interface{}
+}
+
+type Push2SystemArgs struct {
 	SystemId string
-	GroupName  string
-	ClientId   string
+	Code     int
+	Message  string
+	Data     interface{}
+}
+
+type AddClient2GroupArgs struct {
+	SystemId  string
+	GroupName string
+	ClientId  string
 }
 
 type Response struct {
@@ -30,6 +45,18 @@ type Response struct {
 func (s *RPCServer) Push2Client(ctx context.Context, args *Push2ClientArgs, response *Response) error {
 	fmt.Println("接收到RPC消息:发送指定客户端消息")
 	SendMessage2LocalClient(&args.ClientId, args.Code, args.Message, &args.Data)
+	return nil
+}
+
+func (s *RPCServer) Push2Group(ctx context.Context, args *Push2GroupArgs, response *Response) error {
+	fmt.Println("接收到RPC消息:发送分组消息")
+	Manager.SendMessage2LocalGroup(&args.SystemId, &args.GroupName, args.Code, args.Message, &args.Data)
+	return nil
+}
+
+func (s *RPCServer) Push2System(ctx context.Context, args *Push2SystemArgs, response *Response) error {
+	fmt.Println("接收到RPC消息:发送系统消息")
+	Manager.SendMessage2LocalSystem(&args.SystemId, args.Code, args.Message, &args.Data)
 	return nil
 }
 

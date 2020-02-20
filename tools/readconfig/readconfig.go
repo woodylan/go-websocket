@@ -1,7 +1,6 @@
 package readconfig
 
 import (
-	"errors"
 	"github.com/astaxie/beego/config"
 	"os"
 	"strings"
@@ -40,11 +39,9 @@ func InitConfig() (err error) {
 		return err
 	}
 
-	//如果设置了集群，则amqpurl和exchange必须填写
+	//如果设置了集群
 	if cluster {
-		if len(ConfigData.String("rabbitMQ::amqpurl")) == 0 || len(ConfigData.String("rabbitMQ::exchange")) == 0 {
-			return errors.New("集群配置不完整")
-		}
+		//todo
 	}
 	return
 }
