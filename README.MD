@@ -44,20 +44,20 @@
 
 以上两种方案都可以实现需求，但一致性hash算法的方案会使部分key找到的节点不准确；hash slot的方案需要维护一张虚拟表，在实现起来需要有一个功能去判断服务器是否挂了，然后修改这张虚拟表，新增节点也一样，在实现起来会遇到很多问题。
 
-然后我采取的方案是，每个连接都保存在本应用，然后用redis的key value记录每个连接client id对应的服务器IP和端口。对指定client id进行操作时，去redis找出响应的ip和端口，判断是否为本机，不是本机的话进行RPC通讯告诉相应的程序。长连接的连接数据不可迁移，程序挂掉了相应的连接也就挂了，在该程序上的连接也就断开了，这时重连的话会找到另一个可用的程序。
+然后我采取的方案是，每个连接都保存在本应用，然后用对称加密加密服务器IP和端口，得到的值作为clientId。对指定client id进行操作时，只需要加密这个key，就能得到相应的IP和端口，判断是否为本机，不是本机的话进行RPC通讯告诉相应的程序。长连接的连接数据不可迁移，程序挂掉了相应的连接也就挂了，在该程序上的连接也就断开了，这时重连的话会找到另一个可用的程序。
 
 
 
 ### 架构图
 
 **单机服务**
-![WebSocket单机服务架构图](http://cdn.wugenglong.com/assets/2020/0114OQgeCC.png)
+![WebSocket单机服务架构图](http://cdn.wugenglong.com/assets/2020/0220rnY3bm%20.jpg)
 
 <center>单机服务</certer>
 
 **分布式**
 
-![WebSocket分布式服务架构图](http://cdn.wugenglong.com/assets/2020/0114QsEJ8z.png)
+![WebSocket分布式服务架构图](http://cdn.wugenglong.com/assets/2020/02203m4ehn%20.jpg)
 <center>分布式</certer>
 
 
@@ -67,27 +67,26 @@
 **单发消息**
 
 1. 客户端发送连接请求，连接请求通过nginx负载均衡找到一台ws服务器；
-2. ws服务器响应连接请求，返回client id，记录到redis，保持长连接；
+2. ws服务器响应连接请求，通过对称加密服务器IP和端口号，得到的值作为client id，并返回。
 3. 客户端拿到client id之后，交给业务系统；
 4. 业务系统拿到client id之后，通过http发送相关消息，经过nginx负载分配到一台ws服务器；
-5. 这台ws服务器拿到clinet id和消息，去redis查询到IP地址和端口；
+5. 这台ws服务器拿到clinet id和消息，解密出对应的服务器IP和端口；
 6. 拿到IP地址和端口，通过PRC协议给指定ws程序发送信息；
 7. 该ws程序接收到client id和信息，给指定的连接发送信息；
 8. 客户端收到信息。
 
-![WebSocket微服务单发时序图](http://cdn.wugenglong.com/assets/2020/0114jeyDKx.png)
+![WebSocket微服务单发时序图](http://cdn.wugenglong.com/assets/2020/02206m9kwZ%20.jpg)
 <center>WebSocket微服务单发时序图</certer>
-
 **群发消息**
 
 1. 前3个步骤跟单发的一样；
 2. 业务系统拿到client id之后，通过http给指定分组发送消息，经过nginx负载分配到一台ws服务器；
-3. 这台ws服务器拿到分组ID和消息，发布给RabbitMQ；
-4. 所有订阅到RabbitMQ的服务，会收到新信息推送，找到本机所有该分组的连接；
+3. 这台ws服务器拿到分组ID和消息，去Redis查询服务器列表，然后发送RPC广播；
+4. 所有收到广播的服务，找到本机所有该分组的连接；
 5. 给所有这些连接发送消息；
 6. 客户端收到信息。
 
-![WebSocket微服务群发消息时序图](http://cdn.wugenglong.com/assets/2020/0114PMsbbQ.png)
+![WebSocket微服务群发消息时序图](http://cdn.wugenglong.com/assets/2020/02202VrOra%20.jpg)
 
 <center>WebSocket微服务群发消息时序图</certer>
 
@@ -141,8 +140,6 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build
 
 **安装Redis：** 参考网上教程
 
-**安装RabbitMQ：** 参考网上教程
-
 
 
 **配置文件：**
@@ -153,12 +150,8 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build
 [common]
 # 是否分布式部署
 cluster = true
-
-[rabbitMQ]
-# AMQP协议URL 格式：amqp://user:password@host:port/vhostname
-amqpurl = 
-# RabbitMQ交换机名称
-exchange = 
+# 对称加密key 16位
+crypto_key = xxxxxxxxxxxxxxxx
 
 [redis]
 host = 127.0.0.1
@@ -389,4 +382,5 @@ server {
 
 
 ## 沟通交流
-QQ群：1028314856
+扫描添加微信，备注：websocket
+![WebSocket微服务群发消息时序图](http://cdn.wugenglong.com/assets/2020/0220KWeAGI%20.jpeg)
