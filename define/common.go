@@ -13,9 +13,6 @@ const (
 	//redis 客户端ID过期时间
 	REDIS_KEY_SURVIVAL_SECONDS = 172800 //2天
 
-	//redis 分组列表key
-	REDIS_KEY_GROUP_LIST = "ws-group-list"
-
 	//账号列表key
 	REDIS_KEY_ACCOUNT_LIST = "ws-account-list"
 
@@ -27,8 +24,4 @@ const (
 
 	//token前缀
 	REDIS_PREFIX_TOKEN = "ws-token:"
-
-	//RPC消息类型
-	RPC_MESSAGE_TYPE_GROUP  = 1; //分组消息
-	RPC_MESSAGE_TYPE_SYSTEM = 2; //系统消息
 )

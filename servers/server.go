@@ -113,6 +113,24 @@ func SendMessage2System(systemId *string, code int, msg string, data interface{}
 	}
 }
 
+//获取分组列表
+func GetOnlineList(systemId *string, groupName *string) map[string]interface{} {
+	var clientList []string
+	if util.IsCluster() {
+		//发送到系统广播
+		clientList = GetOnlineListBroadcast(systemId, groupName)
+	} else {
+		//如果是单机服务，则只发送到本机
+		//Manager.SendMessage2LocalSystem(systemId, code, msg, &data)
+	}
+
+	return map[string]interface{}{
+		"count": len(clientList),
+		"list":  clientList,
+	}
+
+}
+
 //通过本服务器发送信息
 func SendMessage2LocalClient(clientId *string, code int, msg string, data *interface{}) {
 	ToClientChan <- clientInfo{ClientId: clientId, Code: code, Msg: msg, Data: data}

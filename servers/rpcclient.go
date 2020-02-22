@@ -6,6 +6,7 @@ import (
 	"github.com/smallnest/rpcx/client"
 	"go-websocket/define"
 	"go-websocket/pkg/redis"
+	"sync"
 )
 
 //客户端列表
@@ -82,4 +83,47 @@ func SendSystemBroadcast(systemId *string, code int, message string, data *inter
 	if err != nil {
 		_ = fmt.Errorf("failed to call: %v", err)
 	}
+}
+
+func GetOnlineListBroadcast(systemId *string, groupName *string) (clientIdList []string) {
+	serverList := getServerList()
+	serverCount := len(serverList)
+
+	onlineListChan := make(chan []*Client, serverCount)
+	var wg sync.WaitGroup
+
+	wg.Add(serverCount)
+	for _, server := range serverList {
+		go func(add string) {
+			XClient := getXClient(add)
+
+			response := &GroupListResponse{}
+			err := XClient.Call(context.Background(), "GetOnlineList", &GetGroupListArgs{SystemId: *systemId, GroupName: *groupName}, response)
+			_ = XClient.Close()
+			if err != nil {
+				_ = fmt.Errorf("failed to call: %v", add)
+
+			} else {
+				onlineListChan <- response.List
+			}
+			wg.Done()
+
+		}(server.Key)
+	}
+
+	wg.Wait()
+
+	for i := 1; i <= len(serverList); i++ {
+		list, ok := <-onlineListChan
+		if ok {
+			for _, clientItem := range list {
+				clientIdList = append(clientIdList, clientItem.ClientId)
+			}
+		} else {
+			return
+		}
+	}
+	close(onlineListChan)
+
+	return
 }

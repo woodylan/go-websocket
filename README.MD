@@ -53,12 +53,9 @@
 **单机服务**
 ![WebSocket单机服务架构图](http://cdn.wugenglong.com/assets/2020/0220rnY3bm%20.jpg)
 
-<center>单机服务</certer>
-
 **分布式**
 
 ![WebSocket分布式服务架构图](http://cdn.wugenglong.com/assets/2020/02203m4ehn%20.jpg)
-<center>分布式</certer>
 
 
 
@@ -76,7 +73,7 @@
 8. 客户端收到信息。
 
 ![WebSocket微服务单发时序图](http://cdn.wugenglong.com/assets/2020/02206m9kwZ%20.jpg)
-<center>WebSocket微服务单发时序图</certer>
+
 **群发消息**
 
 1. 前3个步骤跟单发的一样；
@@ -87,9 +84,6 @@
 6. 客户端收到信息。
 
 ![WebSocket微服务群发消息时序图](http://cdn.wugenglong.com/assets/2020/02202VrOra%20.jpg)
-
-<center>WebSocket微服务群发消息时序图</certer>
-
 
 
 ## 使用
@@ -364,6 +358,45 @@ server {
   "code": 0,
   "msg": "success",
   "data": []
+}
+```
+
+#### 获取在线的客户端列表
+
+**请求地址：**/api/get_online_list
+
+**请求方式：** POST
+
+**Content-Type：** application/json; charset=UTF-8
+
+**请求头Header**
+
+| 字段     | 类型   | 是否必须 | 说明     |
+| -------- | ------ | -------- | -------- |
+| Token | string | 是       | 授权ID |
+
+**请求头Body**
+
+| 字段     | 类型   | 是否必须 | 说明     |
+| -------- | ------ | -------- | -------- |
+| groupName | string | 是       | 分组名 |
+| code | integer | 是       | 自定义的状态码 |
+| msg | string | 是       | 自定义的状态消息 |
+| data | sring、array、object | 是       | 消息内容 |
+
+**响应示例：**
+
+```json
+{
+    "code": 0,
+    "msg": "success",
+    "data": {
+        "count": 2,
+        "list": [
+            "WQReWw6m+wct+eKk/2rDiWcU4maU8JRTRZEX8c7Te6LzCa//VCXr/0KeVyO0sdNt",
+            "j6YdsGFH4rfbYN/vS6UavJ5fVclWIB9W+Gqg9R/92cLJqgAp2ZPkvMbQiwQBJmDc"
+        ]
+    }
 }
 ```
 
