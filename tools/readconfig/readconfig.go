@@ -10,12 +10,13 @@ var ConfigData config.Configer
 
 func InitConfig() (err error) {
 	lasTwoPath := map[string]bool{
-		"readconfig":  true,
-		"send2client": true,
-		"bind2group":  true,
-		"send2group":  true,
-		"register":    true,
-		"login":       true,
+		"readconfig":    true,
+		"send2client":   true,
+		"bind2group":    true,
+		"send2group":    true,
+		"getonlinelist": true,
+		"register":      true,
+		"login":         true,
 	}
 
 	path, _ := os.Getwd()

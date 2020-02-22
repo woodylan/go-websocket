@@ -2,7 +2,6 @@ package routers
 
 import (
 	"go-websocket/api/bind2group"
-	"go-websocket/api/getgrouplist"
 	"go-websocket/api/getonlinelist"
 	"go-websocket/api/login"
 	"go-websocket/api/register"

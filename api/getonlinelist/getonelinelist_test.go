@@ -29,7 +29,7 @@ func newServer(t *testing.T) *testServer {
 
 	controller := &Controller{}
 	s.Server = httptest.NewServer(http.HandlerFunc(controller.Run))
-	s.ClientURL = s.Server.URL + "/api/send_to_group"
+	s.ClientURL = s.Server.URL + "/api/get_online_list"
 	return &s
 }
 
@@ -37,7 +37,7 @@ func TestRun(t *testing.T) {
 	s := newServer(t)
 	defer s.Close()
 
-	testContent := `{"groupName":"im","code":0,"msg":"success","data":"im分组接收消息"}`
+	testContent := `{"groupName":"im"}`
 
 	resp, err := http.Post(s.ClientURL, "application/json", strings.NewReader(testContent))
 	Convey("测试发送消息到指定分组", t, func() {

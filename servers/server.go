@@ -121,14 +121,16 @@ func GetOnlineList(systemId *string, groupName *string) map[string]interface{} {
 		clientList = GetOnlineListBroadcast(systemId, groupName)
 	} else {
 		//如果是单机服务，则只发送到本机
-		//Manager.SendMessage2LocalSystem(systemId, code, msg, &data)
+		retList := Manager.GetGroupClientList(util.GenGroupKey(*systemId, *groupName))
+		for _, clientItem := range retList {
+			clientList = append(clientList, clientItem.ClientId)
+		}
 	}
 
 	return map[string]interface{}{
 		"count": len(clientList),
 		"list":  clientList,
 	}
-
 }
 
 //通过本服务器发送信息
