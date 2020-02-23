@@ -12,6 +12,7 @@ type RPCServer struct {
 }
 
 type Push2ClientArgs struct {
+	MessageId  string
 	ClientId   string
 	SendUserId string
 	Code       int
@@ -20,6 +21,7 @@ type Push2ClientArgs struct {
 }
 
 type Push2GroupArgs struct {
+	MessageId  string
 	SystemId   string
 	SendUserId string
 	GroupName  string
@@ -29,6 +31,7 @@ type Push2GroupArgs struct {
 }
 
 type Push2SystemArgs struct {
+	MessageId  string
 	SystemId   string
 	SendUserId string
 	Code       int
@@ -57,19 +60,19 @@ type GroupListResponse struct {
 
 func (s *RPCServer) Push2Client(ctx context.Context, args *Push2ClientArgs, response *Response) error {
 	fmt.Println("接收到RPC消息:发送指定客户端消息")
-	SendMessage2LocalClient(&args.ClientId, &args.SendUserId, args.Code, args.Message, &args.Data)
+	SendMessage2LocalClient(&args.ClientId, &args.MessageId, &args.SendUserId, args.Code, args.Message, &args.Data)
 	return nil
 }
 
 func (s *RPCServer) Push2Group(ctx context.Context, args *Push2GroupArgs, response *Response) error {
 	fmt.Println("接收到RPC消息:发送分组消息")
-	Manager.SendMessage2LocalGroup(&args.SystemId, &args.SendUserId, &args.GroupName, args.Code, args.Message, &args.Data)
+	Manager.SendMessage2LocalGroup(&args.SystemId, &args.MessageId, &args.SendUserId, &args.GroupName, args.Code, args.Message, &args.Data)
 	return nil
 }
 
 func (s *RPCServer) Push2System(ctx context.Context, args *Push2SystemArgs, response *Response) error {
 	fmt.Println("接收到RPC消息:发送系统消息")
-	Manager.SendMessage2LocalSystem(&args.SystemId, &args.SendUserId, args.Code, args.Message, &args.Data)
+	Manager.SendMessage2LocalSystem(&args.SystemId, &args.MessageId, &args.SendUserId, args.Code, args.Message, &args.Data)
 	return nil
 }
 

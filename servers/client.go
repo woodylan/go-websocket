@@ -9,7 +9,7 @@ type Client struct {
 	ClientId    string          // 标识ID
 	SystemId    string          // 系统ID
 	Socket      *websocket.Conn // 用户连接
-	ConnectTime uint64          // 首次连接事件
+	ConnectTime uint64          // 首次连接时间
 }
 
 type SendData struct {

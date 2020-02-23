@@ -128,24 +128,24 @@ func (manager *ClientManager) GetByClientId(clientId string) (*Client, error) {
 }
 
 // 发送到本机分组
-func (manager *ClientManager) SendMessage2LocalGroup(systemId, sendUserId, groupName *string, code int, msg string, data *interface{}) {
+func (manager *ClientManager) SendMessage2LocalGroup(systemId, messageId, sendUserId, groupName *string, code int, msg string, data *interface{}) {
 	if len(*groupName) > 0 {
 		clientList := manager.GetGroupClientList(util.GenGroupKey(*systemId, *groupName))
 		if len(clientList) > 0 {
 			for _, client := range clientList {
-				SendMessage2LocalClient(&client.ClientId, sendUserId, code, msg, data)
+				SendMessage2LocalClient(messageId, &client.ClientId, sendUserId, code, msg, data)
 			}
 		}
 	}
 }
 
 //发送给指定业务系统
-func (manager *ClientManager) SendMessage2LocalSystem(systemId *string, sendUserId *string, code int, msg string, data *interface{}) {
+func (manager *ClientManager) SendMessage2LocalSystem(systemId, messageId *string, sendUserId *string, code int, msg string, data *interface{}) {
 	if len(*systemId) > 0 {
 		clientList := Manager.GetSystemClientList(*systemId)
 		if len(clientList) > 0 {
 			for _, client := range clientList {
-				SendMessage2LocalClient(&client.ClientId, sendUserId, code, msg, data)
+				SendMessage2LocalClient(messageId, &client.ClientId, sendUserId, code, msg, data)
 			}
 		}
 	}

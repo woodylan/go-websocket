@@ -264,9 +264,11 @@ server {
 
 ```json
 {
-  "code": 0,
-  "msg": "success",
-  "data": []
+    "code": 0,
+    "msg": "success",
+    "data": {
+        "messageId": "5b4646dd8328f4b1"
+    }
 }
 ```
 
@@ -330,9 +332,11 @@ server {
 
 ```json
 {
-  "code": 0,
-  "msg": "success",
-  "data": []
+    "code": 0,
+    "msg": "success",
+    "data": {
+        "messageId": "5b4646dd8328f4b1"
+    }
 }
 ```
 

@@ -34,8 +34,10 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//发送信息
-	servers.SendMessage2Client(&inputData.ClientId, &inputData.SendUserId, inputData.Code, inputData.Msg, &inputData.Data)
+	messageId := servers.SendMessage2Client(&inputData.ClientId, &inputData.SendUserId, inputData.Code, inputData.Msg, &inputData.Data)
 
-	api.Render(w, retcode.SUCCESS, "success", []string{})
+	api.Render(w, retcode.SUCCESS, "success", map[string]string{
+		"messageId": messageId,
+	})
 	return
 }
