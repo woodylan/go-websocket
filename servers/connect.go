@@ -44,7 +44,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	//解析参数
 	systemId := r.FormValue("systemId")
 	if len(systemId) == 0 {
-		_ = Render(conn, retcode.SYSTEM_ID_ERROR, "系统ID不能为空", []string{})
+		_ = Render(conn, "", "", retcode.SYSTEM_ID_ERROR, "系统ID不能为空", []string{})
 		_ = conn.Close()
 		return
 	}
@@ -52,7 +52,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	//判断系统ID是否存在
 	jsonValue, err := redis.Get(define.REDIS_PREFIX_ACCOUNT_INFO + systemId)
 	if err != nil || len(jsonValue) == 0 {
-		_ = Render(conn, retcode.SYSTEM_ID_ERROR, "系统ID不正确", []string{})
+		_ = Render(conn, "", "", retcode.SYSTEM_ID_ERROR, "系统ID不正确", []string{})
 		_ = conn.Close()
 		return
 	}

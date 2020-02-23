@@ -57,9 +57,10 @@ func (manager *ClientManager) EventConnect(client *Client) {
 	var data interface{} = map[string]string{
 		"clientId": client.ClientId,
 	}
+	sendUserId := ""
 
 	//发送上线通知
-	SendMessage2System(&client.SystemId, retcode.ONLINE_MESSAGE_CODE, "新客户端上线", data)
+	SendMessage2System(&client.SystemId, &sendUserId, retcode.ONLINE_MESSAGE_CODE, "新客户端上线", data)
 
 	log.Printf("客户端已连接: %s 总连接数：%d", client.ClientId, Manager.Count())
 }
@@ -73,9 +74,10 @@ func (manager *ClientManager) EventDisconnect(client *Client) {
 	var data interface{} = map[string]string{
 		"clientId": client.ClientId,
 	}
+	sendUserId := ""
 
 	//发送下线通知
-	SendMessage2System(&client.SystemId, retcode.OFFLINE_MESSAGE_CODE, "新客户端下线", data)
+	SendMessage2System(&client.SystemId, &sendUserId, retcode.OFFLINE_MESSAGE_CODE, "新客户端下线", data)
 
 	log.Printf("客户端已断开: %s 总连接数：%d 连接时间:%d秒 ", client.ClientId, Manager.Count(), uint64(time.Now().Unix())-client.ConnectTime)
 }
@@ -126,24 +128,24 @@ func (manager *ClientManager) GetByClientId(clientId string) (*Client, error) {
 }
 
 // 发送到本机分组
-func (manager *ClientManager) SendMessage2LocalGroup(systemId, groupName *string, code int, msg string, data *interface{}) {
+func (manager *ClientManager) SendMessage2LocalGroup(systemId, sendUserId, groupName *string, code int, msg string, data *interface{}) {
 	if len(*groupName) > 0 {
 		clientList := manager.GetGroupClientList(util.GenGroupKey(*systemId, *groupName))
 		if len(clientList) > 0 {
 			for _, client := range clientList {
-				SendMessage2LocalClient(&client.ClientId, code, msg, data)
+				SendMessage2LocalClient(&client.ClientId, sendUserId, code, msg, data)
 			}
 		}
 	}
 }
 
 //发送给指定业务系统
-func (manager *ClientManager) SendMessage2LocalSystem(systemId *string, code int, msg string, data *interface{}) {
+func (manager *ClientManager) SendMessage2LocalSystem(systemId *string, sendUserId *string, code int, msg string, data *interface{}) {
 	if len(*systemId) > 0 {
 		clientList := Manager.GetSystemClientList(*systemId)
 		if len(clientList) > 0 {
 			for _, client := range clientList {
-				SendMessage2LocalClient(&client.ClientId, code, msg, data)
+				SendMessage2LocalClient(&client.ClientId, sendUserId, code, msg, data)
 			}
 		}
 	}

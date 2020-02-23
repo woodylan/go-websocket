@@ -283,6 +283,7 @@ server {
 | 字段     | 类型   | 是否必须 | 说明     |
 | -------- | ------ | -------- | -------- |
 | clientId | string | 是       | 客户端ID |
+| sendUserId | string | 是       | 发送者ID |
 | code | integer | 是       | 自定义的状态码 |
 | msg | string | 是       | 自定义的状态消息 |
 | data | sring、array、object | 是       | 消息内容 |
@@ -315,6 +316,7 @@ server {
 
 | 字段     | 类型   | 是否必须 | 说明     |
 | -------- | ------ | -------- | -------- |
+| sendUserId | string | 是       | 发送者ID |
 | clientId | string | 是       | 客户端ID |
 | groupName | string | 是       | 分组名 |
 
@@ -346,6 +348,7 @@ server {
 
 | 字段     | 类型   | 是否必须 | 说明     |
 | -------- | ------ | -------- | -------- |
+| sendUserId | string | 是       | 发送者ID |
 | groupName | string | 是       | 分组名 |
 | code | integer | 是       | 自定义的状态码 |
 | msg | string | 是       | 自定义的状态消息 |

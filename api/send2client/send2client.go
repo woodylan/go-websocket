@@ -12,10 +12,11 @@ type Controller struct {
 }
 
 type inputData struct {
-	ClientId string      `json:"clientId"`
-	Code     int         `json:"code"`
-	Msg      string      `json:"msg"`
-	Data     interface{} `json:"data"`
+	ClientId   string      `json:"clientId"`
+	SendUserId string      `json:"sendUserId"`
+	Code       int         `json:"code"`
+	Msg        string      `json:"msg"`
+	Data       interface{} `json:"data"`
 }
 
 func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +34,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//发送信息
-	servers.SendMessage2Client(&inputData.ClientId, inputData.Code, inputData.Msg, &inputData.Data)
+	servers.SendMessage2Client(&inputData.ClientId, &inputData.SendUserId, inputData.Code, inputData.Msg, &inputData.Data)
 
 	api.Render(w, retcode.SUCCESS, "success", []string{})
 	return

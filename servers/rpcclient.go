@@ -41,12 +41,12 @@ func getXClients() (XClient client.XClient) {
 	return
 }
 
-func SendRpc2Client(addr string, clientId *string, message string, data *interface{}) {
+func SendRpc2Client(addr string, sendUserId, clientId *string, message string, data *interface{}) {
 	XClient := getXClient(addr)
 	defer XClient.Close()
 
 	go fmt.Println("发送到服务器：" + addr + " 客户端：" + *clientId + " 消息：" + (*data).(string))
-	err := XClient.Call(context.Background(), "Push2Client", &Push2ClientArgs{ClientId: *clientId, Message: message, Data: data}, &Response{})
+	err := XClient.Call(context.Background(), "Push2Client", &Push2ClientArgs{SendUserId: *sendUserId, ClientId: *clientId, Message: message, Data: data}, &Response{})
 	if err != nil {
 		_ = fmt.Errorf("failed to call: %v", err)
 	}
@@ -64,22 +64,22 @@ func SendRpcBindGroup(addr *string, systemId *string, groupName *string, clientI
 }
 
 //发送分组消息
-func SendGroupBroadcast(systemId *string, groupName *string, code int, message string, data *interface{}) {
+func SendGroupBroadcast(systemId *string, sendUserId, groupName *string, code int, message string, data *interface{}) {
 	XClient := getXClients()
 	defer XClient.Close()
 
-	err := XClient.Broadcast(context.Background(), "Push2Group", &Push2GroupArgs{SystemId: *systemId, GroupName: *groupName, Code: code, Message: message, Data: data}, &Response{})
+	err := XClient.Broadcast(context.Background(), "Push2Group", &Push2GroupArgs{SystemId: *systemId, SendUserId: *sendUserId, GroupName: *groupName, Code: code, Message: message, Data: data}, &Response{})
 	if err != nil {
 		_ = fmt.Errorf("failed to call: %v", err)
 	}
 }
 
 //发送系统信息
-func SendSystemBroadcast(systemId *string, code int, message string, data *interface{}) {
+func SendSystemBroadcast(systemId, sendUserId *string, code int, message string, data *interface{}) {
 	XClient := getXClients()
 	defer XClient.Close()
 
-	err := XClient.Broadcast(context.Background(), "Push2System", &Push2SystemArgs{SystemId: *systemId, Code: code, Message: message, Data: data}, &Response{})
+	err := XClient.Broadcast(context.Background(), "Push2System", &Push2SystemArgs{SystemId: *systemId, SendUserId: *sendUserId, Code: code, Message: message, Data: data}, &Response{})
 	if err != nil {
 		_ = fmt.Errorf("failed to call: %v", err)
 	}

@@ -3,7 +3,6 @@ package servers
 import (
 	"fmt"
 	"github.com/gorilla/websocket"
-	"go-websocket/api"
 	"go-websocket/define"
 	"go-websocket/pkg/redis"
 	"go-websocket/tools/util"
@@ -17,10 +16,20 @@ var ToClientChan chan clientInfo
 
 //channel通道结构体
 type clientInfo struct {
-	ClientId *string
-	Code     int
-	Msg      string
-	Data     *interface{}
+	ClientId   *string
+	SendUserId *string
+	MessageId  string
+	Code       int
+	Msg        string
+	Data       *interface{}
+}
+
+type RetData struct {
+	MessageId  string      `json:"messageId"`
+	SendUserId string      `json:"sendUserId"`
+	Code       int         `json:"code"`
+	Msg        string      `json:"msg"`
+	Data       interface{} `json:"data"`
 }
 
 // 心跳间隔
@@ -40,7 +49,7 @@ func StartWebSocket() {
 }
 
 //发送信息到指定客户端
-func SendMessage2Client(clientId *string, code int, msg string, data *interface{}) {
+func SendMessage2Client(clientId *string, sendUserId *string, code int, msg string, data *interface{}) {
 	if util.IsCluster() {
 		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(*clientId)
 		if err != nil {
@@ -50,14 +59,14 @@ func SendMessage2Client(clientId *string, code int, msg string, data *interface{
 
 		//如果是本机则发送到本机
 		if isLocal {
-			SendMessage2LocalClient(clientId, code, msg, data)
+			SendMessage2LocalClient(clientId, sendUserId, code, msg, data)
 		} else {
 			//发送到指定机器
-			SendRpc2Client(addr, clientId, msg, data)
+			SendRpc2Client(addr, sendUserId, clientId, msg, data)
 		}
 	} else {
 		//如果是单机服务，则只发送到本机
-		SendMessage2LocalClient(clientId, code, msg, data)
+		SendMessage2LocalClient(clientId, sendUserId, code, msg, data)
 	}
 }
 
@@ -92,24 +101,24 @@ func AddClient2Group(systemId *string, groupName *string, clientId string) {
 }
 
 //发送信息到指定分组
-func SendMessage2Group(systemId, groupName *string, code int, msg string, data *interface{}) {
+func SendMessage2Group(systemId, sendUserId, groupName *string, code int, msg string, data *interface{}) {
 	if util.IsCluster() {
 		//发送分组消息给指定广播
-		SendGroupBroadcast(systemId, groupName, code, msg, data)
+		SendGroupBroadcast(systemId, sendUserId, groupName, code, msg, data)
 	} else {
 		//如果是单机服务，则只发送到本机
-		Manager.SendMessage2LocalGroup(systemId, groupName, code, msg, data)
+		Manager.SendMessage2LocalGroup(systemId, sendUserId, groupName, code, msg, data)
 	}
 }
 
 //发送信息到指定系统
-func SendMessage2System(systemId *string, code int, msg string, data interface{}) {
+func SendMessage2System(systemId, sendUserId *string, code int, msg string, data interface{}) {
 	if util.IsCluster() {
 		//发送到系统广播
-		SendSystemBroadcast(systemId, code, msg, &data)
+		SendSystemBroadcast(systemId, sendUserId, code, msg, &data)
 	} else {
 		//如果是单机服务，则只发送到本机
-		Manager.SendMessage2LocalSystem(systemId, code, msg, &data)
+		Manager.SendMessage2LocalSystem(systemId, sendUserId, code, msg, &data)
 	}
 }
 
@@ -134,8 +143,8 @@ func GetOnlineList(systemId *string, groupName *string) map[string]interface{} {
 }
 
 //通过本服务器发送信息
-func SendMessage2LocalClient(clientId *string, code int, msg string, data *interface{}) {
-	ToClientChan <- clientInfo{ClientId: clientId, Code: code, Msg: msg, Data: data}
+func SendMessage2LocalClient(clientId *string, sendUserId *string, code int, msg string, data *interface{}) {
+	ToClientChan <- clientInfo{ClientId: clientId, MessageId: util.GenUUID(), SendUserId: sendUserId, Code: code, Msg: msg, Data: data}
 }
 
 //监听并发送给客户端信息
@@ -145,7 +154,7 @@ func WriteMessage() {
 		case clientInfo := <-ToClientChan:
 			fmt.Println("发送到本机客户端：" + *clientInfo.ClientId)
 			if conn, err := Manager.GetByClientId(*clientInfo.ClientId); err == nil && conn != nil {
-				if err := Render(conn.Socket, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
+				if err := Render(conn.Socket, clientInfo.MessageId, *clientInfo.SendUserId, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
 					_ = conn.Socket.Close()
 					log.Println(err)
 					return
@@ -161,11 +170,13 @@ func WriteMessage() {
 	}
 }
 
-func Render(conn *websocket.Conn, code int, message string, data interface{}) error {
-	return conn.WriteJSON(api.RetData{
-		Code: code,
-		Msg:  message,
-		Data: data,
+func Render(conn *websocket.Conn, messageId string, sendUserId string, code int, message string, data interface{}) error {
+	return conn.WriteJSON(RetData{
+		Code:       code,
+		MessageId:  messageId,
+		SendUserId: sendUserId,
+		Msg:        message,
+		Data:       data,
 	})
 }
 

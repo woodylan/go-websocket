@@ -12,10 +12,11 @@ type Controller struct {
 }
 
 type inputData struct {
-	GroupName string      `json:"groupName"`
-	Code      int         `json:"code"`
-	Msg       string      `json:"msg"`
-	Data      interface{} `json:"data"`
+	SendUserId string      `json:"sendUserId"`
+	GroupName  string      `json:"groupName"`
+	Code       int         `json:"code"`
+	Msg        string      `json:"msg"`
+	Data       interface{} `json:"data"`
 }
 
 func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
@@ -33,7 +34,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	}
 
 	systemId := r.Header.Get("systemId")
-	servers.SendMessage2Group(&systemId, &inputData.GroupName, inputData.Code, inputData.Msg, &inputData.Data)
+	servers.SendMessage2Group(&systemId, &inputData.SendUserId, &inputData.GroupName, inputData.Code, inputData.Msg, &inputData.Data)
 
 	api.Render(w, retcode.SUCCESS, "success", []string{})
 	return
