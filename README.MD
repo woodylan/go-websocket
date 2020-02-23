@@ -225,7 +225,6 @@ server {
 | 字段     | 类型   | 是否必须 | 说明     |
 | -------- | ------ | -------- | -------- |
 | systemId | string | 是       | 系统ID |
-| password | string | 是       | 密码 |
 
 **响应示例：**
 
@@ -234,33 +233,6 @@ server {
   "code": 0,
   "msg": "success",
   "data": []
-}
-```
-
-#### 登录系统
-
-**请求地址：**/api/login
-
-**请求方式：** POST
-
-**Content-Type：** application/json; charset=UTF-8
-
-**请求头Body**
-
-| 字段     | 类型   | 是否必须 | 说明     |
-| -------- | ------ | -------- | -------- |
-| systemId | string | 是       | 系统ID |
-| password | string | 是       | 密码 |
-
-**响应示例：**
-
-```json
-{
-    "code": 0,
-    "msg": "success",
-    "data": {
-        "token": "04414301b4846e11"
-    }
 }
 ```
 
@@ -276,7 +248,7 @@ server {
 
 | 字段     | 类型   | 是否必须 | 说明     |
 | -------- | ------ | -------- | -------- |
-| Token | string | 是       | 授权ID |
+| systemId | string | 是       | 系统ID |
 
 **请求头Body**
 
@@ -310,7 +282,7 @@ server {
 
 | 字段     | 类型   | 是否必须 | 说明     |
 | -------- | ------ | -------- | -------- |
-| Token | string | 是       | 授权ID |
+| systemId | string | 是       | 系统ID |
 
 **请求头Body**
 
@@ -342,7 +314,7 @@ server {
 
 | 字段     | 类型   | 是否必须 | 说明     |
 | -------- | ------ | -------- | -------- |
-| Token | string | 是       | 授权ID |
+| systemId | string | 是       | 系统ID |
 
 **请求头Body**
 
@@ -376,7 +348,7 @@ server {
 
 | 字段     | 类型   | 是否必须 | 说明     |
 | -------- | ------ | -------- | -------- |
-| Token | string | 是       | 授权ID |
+| systemId | string | 是       | 系统ID |
 
 **请求头Body**
 

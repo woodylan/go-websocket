@@ -30,7 +30,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := servers.Register(inputData.SystemId, inputData.Password)
+	err := servers.Register(inputData.SystemId)
 	if err != nil {
 		api.Render(w, retcode.FAIL, err.Error(), []string{})
 		return
