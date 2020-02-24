@@ -60,7 +60,7 @@ type GroupListResponse struct {
 
 func (s *RPCServer) Push2Client(ctx context.Context, args *Push2ClientArgs, response *Response) error {
 	fmt.Println("接收到RPC消息:发送指定客户端消息")
-	SendMessage2LocalClient(&args.ClientId, &args.MessageId, &args.SendUserId, args.Code, args.Message, &args.Data)
+	SendMessage2LocalClient(&args.MessageId, &args.ClientId, &args.SendUserId, args.Code, args.Message, &args.Data)
 	return nil
 }
 
