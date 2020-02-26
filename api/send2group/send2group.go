@@ -34,7 +34,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	}
 
 	systemId := r.Header.Get("systemId")
-	messageId := servers.SendMessage2Group(&systemId, &inputData.SendUserId, &inputData.GroupName, inputData.Code, inputData.Msg, &inputData.Data)
+	messageId := servers.SendMessage2Group(systemId, inputData.SendUserId, inputData.GroupName, inputData.Code, inputData.Msg, &inputData.Data)
 
 	api.Render(w, retcode.SUCCESS, "success", map[string]string{
 		"messageId": messageId,

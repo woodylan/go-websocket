@@ -10,6 +10,8 @@ type Client struct {
 	SystemId    string          // 系统ID
 	Socket      *websocket.Conn // 用户连接
 	ConnectTime uint64          // 首次连接时间
+	IsDeleted   bool            // 是否删除或下线
+	GroupList   []string
 }
 
 type SendData struct {
@@ -24,6 +26,7 @@ func NewClient(clientId string, systemId string, socket *websocket.Conn) (*Clien
 		SystemId:    systemId,
 		Socket:      socket,
 		ConnectTime: uint64(time.Now().Unix()),
+		IsDeleted:   false,
 	}
 }
 

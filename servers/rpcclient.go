@@ -41,45 +41,45 @@ func getXClients() (XClient client.XClient) {
 	return
 }
 
-func SendRpc2Client(addr string, messageId, sendUserId, clientId *string, message string, data *interface{}) {
+func SendRpc2Client(addr string, messageId, sendUserId, clientId string, message string, data *interface{}) {
 	XClient := getXClient(addr)
 	defer XClient.Close()
 
-	go fmt.Println("发送到服务器：" + addr + " 客户端：" + *clientId + " 消息：" + (*data).(string))
-	err := XClient.Call(context.Background(), "Push2Client", &Push2ClientArgs{MessageId: *messageId, SendUserId: *sendUserId, ClientId: *clientId, Message: message, Data: data}, &Response{})
+	go fmt.Println("发送到服务器：" + addr + " 客户端：" + clientId + " 消息：" + (*data).(string))
+	err := XClient.Call(context.Background(), "Push2Client", &Push2ClientArgs{MessageId: messageId, SendUserId: sendUserId, ClientId: clientId, Message: message, Data: data}, &Response{})
 	if err != nil {
 		_ = fmt.Errorf("failed to call: %v", err)
 	}
 }
 
 //绑定分组
-func SendRpcBindGroup(addr *string, systemId *string, groupName *string, clientId *string) {
+func SendRpcBindGroup(addr *string, systemId string, groupName string, clientId string) {
 	XClient := getXClient(*addr)
 	defer XClient.Close()
 
-	err := XClient.Call(context.Background(), "AddClient2Group", &AddClient2GroupArgs{SystemId: *systemId, GroupName: *groupName, ClientId: *clientId}, &Response{})
+	err := XClient.Call(context.Background(), "AddClient2Group", &AddClient2GroupArgs{SystemId: systemId, GroupName: groupName, ClientId: clientId}, &Response{})
 	if err != nil {
 		_ = fmt.Errorf("failed to call: %v", err)
 	}
 }
 
 //发送分组消息
-func SendGroupBroadcast(systemId *string, messageId, sendUserId, groupName *string, code int, message string, data *interface{}) {
+func SendGroupBroadcast(systemId string, messageId, sendUserId, groupName string, code int, message string, data *interface{}) {
 	XClient := getXClients()
 	defer XClient.Close()
 
-	err := XClient.Broadcast(context.Background(), "Push2Group", &Push2GroupArgs{MessageId: *messageId, SystemId: *systemId, SendUserId: *sendUserId, GroupName: *groupName, Code: code, Message: message, Data: data}, &Response{})
+	err := XClient.Broadcast(context.Background(), "Push2Group", &Push2GroupArgs{MessageId: messageId, SystemId: systemId, SendUserId: sendUserId, GroupName: groupName, Code: code, Message: message, Data: data}, &Response{})
 	if err != nil {
 		_ = fmt.Errorf("failed to call: %v", err)
 	}
 }
 
 //发送系统信息
-func SendSystemBroadcast(systemId, messageId, sendUserId *string, code int, message string, data *interface{}) {
+func SendSystemBroadcast(systemId, messageId, sendUserId string, code int, message string, data *interface{}) {
 	XClient := getXClients()
 	defer XClient.Close()
 
-	err := XClient.Broadcast(context.Background(), "Push2System", &Push2SystemArgs{MessageId: *messageId, SystemId: *systemId, SendUserId: *sendUserId, Code: code, Message: message, Data: data}, &Response{})
+	err := XClient.Broadcast(context.Background(), "Push2System", &Push2SystemArgs{MessageId: messageId, SystemId: systemId, SendUserId: sendUserId, Code: code, Message: message, Data: data}, &Response{})
 	if err != nil {
 		_ = fmt.Errorf("failed to call: %v", err)
 	}
@@ -89,7 +89,7 @@ func GetOnlineListBroadcast(systemId *string, groupName *string) (clientIdList [
 	serverList := getServerList()
 	serverCount := len(serverList)
 
-	onlineListChan := make(chan []*Client, serverCount)
+	onlineListChan := make(chan []string, serverCount)
 	var wg sync.WaitGroup
 
 	wg.Add(serverCount)
@@ -116,8 +116,8 @@ func GetOnlineListBroadcast(systemId *string, groupName *string) (clientIdList [
 	for i := 1; i <= len(serverList); i++ {
 		list, ok := <-onlineListChan
 		if ok {
-			for _, clientItem := range list {
-				clientIdList = append(clientIdList, clientItem.ClientId)
+			for _, clientId := range list {
+				clientIdList = append(clientIdList, clientId)
 			}
 		} else {
 			return

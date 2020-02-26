@@ -18,10 +18,10 @@ type ClientManager struct {
 	DisConnect chan *Client // 断开连接处理
 
 	GroupLock sync.RWMutex
-	Groups    map[string][]*Client
+	Groups map[string][]string
 
 	SystemClientsLock sync.RWMutex
-	SystemClients     map[string][]*Client
+	SystemClients map[string][]string
 }
 
 func NewClientManager() (clientManager *ClientManager) {
@@ -29,8 +29,8 @@ func NewClientManager() (clientManager *ClientManager) {
 		ClientIdMap:   make(map[string]*Client),
 		Connect:       make(chan *Client, 1000),
 		DisConnect:    make(chan *Client, 1000),
-		Groups:        make(map[string][]*Client, 100),
-		SystemClients: make(map[string][]*Client, 100),
+		Groups:        make(map[string][]string, 100),
+		SystemClients: make(map[string][]string, 100),
 	}
 
 	return
@@ -54,14 +54,6 @@ func (manager *ClientManager) Start() {
 func (manager *ClientManager) EventConnect(client *Client) {
 	manager.AddClient(client)
 
-	var data interface{} = map[string]string{
-		"clientId": client.ClientId,
-	}
-	sendUserId := ""
-
-	//发送上线通知
-	SendMessage2System(&client.SystemId, &sendUserId, retcode.ONLINE_MESSAGE_CODE, "新客户端上线", data)
-
 	log.Printf("客户端已连接: %s 总连接数：%d", client.ClientId, Manager.Count())
 }
 
@@ -77,7 +69,13 @@ func (manager *ClientManager) EventDisconnect(client *Client) {
 	sendUserId := ""
 
 	//发送下线通知
-	SendMessage2System(&client.SystemId, &sendUserId, retcode.OFFLINE_MESSAGE_CODE, "新客户端下线", data)
+	if len(client.GroupList) > 0 {
+		for _, groupName := range client.GroupList {
+			SendMessage2Group(client.SystemId, sendUserId, groupName, retcode.OFFLINE_MESSAGE_CODE, "客户端下线", &data)
+		}
+	}
+	//标记销毁
+	client.IsDeleted = true
 
 	log.Printf("客户端已断开: %s 总连接数：%d 连接时间:%d秒 ", client.ClientId, Manager.Count(), uint64(time.Now().Unix())-client.ConnectTime)
 }
@@ -128,38 +126,61 @@ func (manager *ClientManager) GetByClientId(clientId string) (*Client, error) {
 }
 
 // 发送到本机分组
-func (manager *ClientManager) SendMessage2LocalGroup(systemId, messageId, sendUserId, groupName *string, code int, msg string, data *interface{}) {
-	if len(*groupName) > 0 {
-		clientList := manager.GetGroupClientList(util.GenGroupKey(*systemId, *groupName))
-		if len(clientList) > 0 {
-			for _, client := range clientList {
-				SendMessage2LocalClient(messageId, &client.ClientId, sendUserId, code, msg, data)
+func (manager *ClientManager) SendMessage2LocalGroup(systemId, messageId, sendUserId, groupName string, code int, msg string, data *interface{}) {
+	if len(groupName) > 0 {
+		clientIds := manager.GetGroupClientList(util.GenGroupKey(systemId, groupName))
+		if len(clientIds) > 0 {
+			for _, clientId := range clientIds {
+				if _, err := Manager.GetByClientId(clientId); err == nil {
+					//添加到本地
+					SendMessage2LocalClient(messageId, clientId, sendUserId, code, msg, data)
+				} else {
+					//todo 删除分组
+				}
 			}
 		}
 	}
 }
 
 //发送给指定业务系统
-func (manager *ClientManager) SendMessage2LocalSystem(systemId, messageId *string, sendUserId *string, code int, msg string, data *interface{}) {
-	if len(*systemId) > 0 {
-		clientList := Manager.GetSystemClientList(*systemId)
-		if len(clientList) > 0 {
-			for _, client := range clientList {
-				SendMessage2LocalClient(messageId, &client.ClientId, sendUserId, code, msg, data)
+func (manager *ClientManager) SendMessage2LocalSystem(systemId, messageId string, sendUserId string, code int, msg string, data *interface{}) {
+	if len(systemId) > 0 {
+		clientIds := Manager.GetSystemClientList(systemId)
+		if len(clientIds) > 0 {
+			for _, clientId := range clientIds {
+				SendMessage2LocalClient(messageId, clientId, sendUserId, code, msg, data)
 			}
 		}
 	}
 }
 
 // 添加到本地分组
-func (manager *ClientManager) AddClient2LocalGroup(groupKey string, client *Client) {
+func (manager *ClientManager) AddClient2LocalGroup(groupName string, client *Client) {
+	// 为属性添加分组信息
+	groupKey := util.GenGroupKey(client.SystemId, groupName)
+
+	manager.addClient2Group(groupKey, client)
+
+	client.GroupList = append(client.GroupList, groupName)
+
+	var data interface{} = map[string]string{
+		"clientId": client.ClientId,
+	}
+	sendUserId := ""
+
+	//发送系统通知
+	SendMessage2Group(client.SystemId, sendUserId, groupName, retcode.ONLINE_MESSAGE_CODE, "客户端上线", &data)
+}
+
+// 添加到本地分组
+func (manager *ClientManager) addClient2Group(groupKey string, client *Client) {
 	manager.GroupLock.RLock()
 	defer manager.GroupLock.RUnlock()
-	manager.Groups[groupKey] = append(manager.Groups[groupKey], client)
+	manager.Groups[groupKey] = append(manager.Groups[groupKey], client.ClientId)
 }
 
 // 获取本地分组的成员
-func (manager *ClientManager) GetGroupClientList(groupKey string) []*Client {
+func (manager *ClientManager) GetGroupClientList(groupKey string) []string {
 	manager.GroupLock.RLock()
 	defer manager.GroupLock.RUnlock()
 	return manager.Groups[groupKey]
@@ -169,11 +190,11 @@ func (manager *ClientManager) GetGroupClientList(groupKey string) []*Client {
 func (manager *ClientManager) AddClient2SystemClient(systemId *string, client *Client) {
 	manager.SystemClientsLock.RLock()
 	defer manager.SystemClientsLock.RUnlock()
-	manager.SystemClients[*systemId] = append(manager.SystemClients[*systemId], client)
+	manager.SystemClients[*systemId] = append(manager.SystemClients[*systemId], client.ClientId)
 }
 
 // 获取指定系统的客户端列表
-func (manager *ClientManager) GetSystemClientList(systemId string) []*Client {
+func (manager *ClientManager) GetSystemClientList(systemId string) []string {
 	manager.SystemClientsLock.RLock()
 	defer manager.SystemClientsLock.RUnlock()
 	return manager.SystemClients[systemId]

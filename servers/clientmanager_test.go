@@ -7,10 +7,6 @@ import (
 	"testing"
 )
 
-func newTestManager() {
-
-}
-
 func TestAddClient(t *testing.T) {
 	clientId := "clientId"
 	systemId := "publishSystem"
@@ -112,12 +108,12 @@ func TestAddClient2LocalGroup(t *testing.T) {
 
 	Convey("测试添加分组", t, func() {
 		Convey("添加一个客户端到分组", func() {
-			manager.AddClient2LocalGroup(util.GenGroupKey(systemId, groupName), clientSocket)
+			manager.AddClient2LocalGroup(groupName, clientSocket)
 			So(len(manager.Groups[util.GenGroupKey(systemId, groupName)]), ShouldEqual, 1)
 		})
 
 		Convey("再添加一个客户端到分组", func() {
-			manager.AddClient2LocalGroup(util.GenGroupKey(systemId, groupName), clientSocket)
+			manager.AddClient2LocalGroup(groupName, clientSocket)
 			So(len(manager.Groups[util.GenGroupKey(systemId, groupName)]), ShouldEqual, 2)
 		})
 	})
@@ -134,14 +130,14 @@ func TestGetGroupClientList(t *testing.T) {
 
 	Convey("测试添加分组", t, func() {
 		Convey("获取一个存在的分组", func() {
-			manager.AddClient2LocalGroup(util.GenGroupKey(systemId, groupName), clientSocket)
-			clientList := manager.GetGroupClientList(util.GenGroupKey(systemId, groupName))
-			So(len(clientList), ShouldEqual, 1)
+			manager.AddClient2LocalGroup(groupName, clientSocket)
+			clientIds := manager.GetGroupClientList(util.GenGroupKey(systemId, groupName))
+			So(len(clientIds), ShouldEqual, 1)
 		})
 
 		Convey("获取一个不存在的clientId", func() {
-			clientList := manager.GetGroupClientList("notExistId")
-			So(len(clientList), ShouldEqual, 0)
+			clientIds := manager.GetGroupClientList("notExistId")
+			So(len(clientIds), ShouldEqual, 0)
 		})
 	})
 }
