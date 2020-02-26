@@ -61,7 +61,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 
 	clientSocket := NewClient(clientId, systemId, conn)
 
-	Manager.AddClient2SystemClient(&systemId, clientSocket)
+	Manager.AddClient2SystemClient(systemId, clientSocket)
 
 	//读取客户端消息
 	clientSocket.Read()

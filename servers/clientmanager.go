@@ -18,10 +18,10 @@ type ClientManager struct {
 	DisConnect chan *Client // 断开连接处理
 
 	GroupLock sync.RWMutex
-	Groups map[string][]string
+	Groups    map[string][]string
 
 	SystemClientsLock sync.RWMutex
-	SystemClients map[string][]string
+	SystemClients     map[string][]string
 }
 
 func NewClientManager() (clientManager *ClientManager) {
@@ -105,11 +105,26 @@ func (manager *ClientManager) Count() int {
 
 // 删除客户端
 func (manager *ClientManager) DelClient(client *Client) {
+	manager.delClientIdMap(client.ClientId)
+
+	//删除所在的分组
+	if len(client.GroupList) > 0 {
+		for _, groupName := range client.GroupList {
+			manager.delGroupClient(util.GenGroupKey(client.SystemId, groupName), client.ClientId)
+		}
+	}
+
+	// 删除系统里的客户端
+	manager.delSystemClient(client)
+}
+
+// 删除clientIdMap
+func (manager *ClientManager) delClientIdMap(clientId string) {
 	manager.ClientIdMapLock.Lock()
 	defer manager.ClientIdMapLock.Unlock()
 
-	if _, ok := manager.ClientIdMap[client.ClientId]; ok {
-		delete(manager.ClientIdMap, client.ClientId)
+	if _, ok := manager.ClientIdMap[clientId]; ok {
+		delete(manager.ClientIdMap, clientId)
 	}
 }
 
@@ -135,7 +150,8 @@ func (manager *ClientManager) SendMessage2LocalGroup(systemId, messageId, sendUs
 					//添加到本地
 					SendMessage2LocalClient(messageId, clientId, sendUserId, code, msg, data)
 				} else {
-					//todo 删除分组
+					//删除分组
+					manager.delGroupClient(util.GenGroupKey(systemId, groupName), clientId)
 				}
 			}
 		}
@@ -179,6 +195,18 @@ func (manager *ClientManager) addClient2Group(groupKey string, client *Client) {
 	manager.Groups[groupKey] = append(manager.Groups[groupKey], client.ClientId)
 }
 
+// 删除分组里的客户端
+func (manager *ClientManager) delGroupClient(groupKey string, clientId string) {
+	manager.GroupLock.RLock()
+	defer manager.GroupLock.RUnlock()
+
+	for index, groupClientId := range manager.Groups[groupKey] {
+		if groupClientId == clientId {
+			manager.Groups[groupKey] = append(manager.Groups[groupKey][:index], manager.Groups[groupKey][index+1:]...)
+		}
+	}
+}
+
 // 获取本地分组的成员
 func (manager *ClientManager) GetGroupClientList(groupKey string) []string {
 	manager.GroupLock.RLock()
@@ -187,10 +215,22 @@ func (manager *ClientManager) GetGroupClientList(groupKey string) []string {
 }
 
 // 添加到系统客户端列表
-func (manager *ClientManager) AddClient2SystemClient(systemId *string, client *Client) {
+func (manager *ClientManager) AddClient2SystemClient(systemId string, client *Client) {
 	manager.SystemClientsLock.RLock()
 	defer manager.SystemClientsLock.RUnlock()
-	manager.SystemClients[*systemId] = append(manager.SystemClients[*systemId], client.ClientId)
+	manager.SystemClients[systemId] = append(manager.SystemClients[systemId], client.ClientId)
+}
+
+// 删除系统里的客户端
+func (manager *ClientManager) delSystemClient(client *Client) {
+	manager.SystemClientsLock.RLock()
+	defer manager.SystemClientsLock.RUnlock()
+
+	for index, clientId := range manager.SystemClients[client.SystemId] {
+		if clientId == client.ClientId {
+			manager.SystemClients[client.SystemId] = append(manager.SystemClients[client.SystemId][:index], manager.SystemClients[client.SystemId][index+1:]...)
+		}
+	}
 }
 
 // 获取指定系统的客户端列表
