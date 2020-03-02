@@ -1,8 +1,8 @@
 package redis
 
 import (
-	"fmt"
 	"github.com/gomodule/redigo/redis"
+	log "github.com/sirupsen/logrus"
 	"go-websocket/tools/readconfig"
 )
 
@@ -20,7 +20,7 @@ func connect() (redis.Conn, error) {
 	}
 
 	if err != nil {
-		fmt.Println("redis connect error: " + fmt.Sprintf("%v", err))
+		log.Errorf("redis connect error: %v", err)
 	}
 
 	return Conn, err

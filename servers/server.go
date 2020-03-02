@@ -1,12 +1,11 @@
 package servers
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
 	"go-websocket/define"
 	"go-websocket/pkg/redis"
 	"go-websocket/tools/util"
-	"log"
 	"net/http"
 	"time"
 )
@@ -54,7 +53,7 @@ func SendMessage2Client(clientId string, sendUserId string, code int, msg string
 	if util.IsCluster() {
 		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(clientId)
 		if err != nil {
-			_ = fmt.Errorf("%s", err)
+			log.Errorf("%s", err)
 			return
 		}
 
@@ -80,7 +79,7 @@ func AddClient2Group(systemId string, groupName string, clientId string) {
 		//判断key是否存在
 		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(clientId)
 		if err != nil {
-			_ = fmt.Errorf("%s", err)
+			log.Errorf("%s", err)
 			return
 		}
 
@@ -89,7 +88,7 @@ func AddClient2Group(systemId string, groupName string, clientId string) {
 				//添加到本地
 				Manager.AddClient2LocalGroup(groupName, client)
 			} else {
-				fmt.Println(err)
+				log.Error(err)
 			}
 		} else {
 			//发送到指定的机器
@@ -159,7 +158,16 @@ func WriteMessage() {
 	for {
 		select {
 		case clientInfo := <-ToClientChan:
-			fmt.Println("发送到本机客户端：" + clientInfo.ClientId)
+			log.WithFields(log.Fields{
+				"host":       define.LocalHost,
+				"port":       define.Port,
+				"clientId":   clientInfo.ClientId,
+				"messageId":  clientInfo.MessageId,
+				"sendUserId": clientInfo.SendUserId,
+				"code":       clientInfo.Code,
+				"msg":        clientInfo.Msg,
+				"data":       clientInfo.Data,
+			}).Info("发送到本机")
 			if conn, err := Manager.GetByClientId(clientInfo.ClientId); err == nil && conn != nil {
 				if err := Render(conn.Socket, clientInfo.MessageId, clientInfo.SendUserId, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
 					_ = conn.Socket.Close()

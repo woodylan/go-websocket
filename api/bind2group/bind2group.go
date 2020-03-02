@@ -2,7 +2,6 @@ package bind2group
 
 import (
 	"encoding/json"
-	"fmt"
 	"go-websocket/api"
 	"go-websocket/define/retcode"
 	"go-websocket/servers"
@@ -34,8 +33,6 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	if len(inputData.ClientId) > 0 && len(inputData.GroupName) > 0 {
 		systemId := r.Header.Get("systemId")
 		servers.AddClient2Group(systemId, inputData.GroupName, inputData.ClientId)
-	} else {
-		fmt.Println("参数错误")
 	}
 
 	api.Render(w, retcode.SUCCESS, "success", []string{})

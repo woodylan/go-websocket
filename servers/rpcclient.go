@@ -2,18 +2,18 @@ package servers
 
 import (
 	"context"
-	"fmt"
 	"github.com/smallnest/rpcx/client"
 	"go-websocket/define"
 	"go-websocket/pkg/redis"
 	"sync"
+	log "github.com/sirupsen/logrus"
 )
 
 //客户端列表
 func getServerList() []*client.KVPair {
 	serverList, err := redis.SMEMBERS(define.REDIS_KEY_SERVER_LIST)
 	if err != nil {
-		_ = fmt.Errorf("failed to get server list: %v", err)
+		log.Errorf("failed to get server list: %v", err)
 		return []*client.KVPair{
 			{Key: define.LocalHost + ":" + define.RPCPort},
 		}
@@ -45,10 +45,16 @@ func SendRpc2Client(addr string, messageId, sendUserId, clientId string, message
 	XClient := getXClient(addr)
 	defer XClient.Close()
 
-	go fmt.Println("发送到服务器：" + addr + " 客户端：" + clientId + " 消息：" + (*data).(string))
+	log.WithFields(log.Fields{
+		"host":     define.LocalHost,
+		"port":     define.Port,
+		"add":      addr,
+		"clientId": clientId,
+		"msg":      (*data).(string),
+	}).Info("发送到服务器")
 	err := XClient.Call(context.Background(), "Push2Client", &Push2ClientArgs{MessageId: messageId, SendUserId: sendUserId, ClientId: clientId, Message: message, Data: data}, &Response{})
 	if err != nil {
-		_ = fmt.Errorf("failed to call: %v", err)
+		log.Errorf("failed to call: %v", err)
 	}
 }
 
@@ -59,7 +65,7 @@ func SendRpcBindGroup(addr *string, systemId string, groupName string, clientId 
 
 	err := XClient.Call(context.Background(), "AddClient2Group", &AddClient2GroupArgs{SystemId: systemId, GroupName: groupName, ClientId: clientId}, &Response{})
 	if err != nil {
-		_ = fmt.Errorf("failed to call: %v", err)
+		log.Errorf("failed to call: %v", err)
 	}
 }
 
@@ -70,7 +76,7 @@ func SendGroupBroadcast(systemId string, messageId, sendUserId, groupName string
 
 	err := XClient.Broadcast(context.Background(), "Push2Group", &Push2GroupArgs{MessageId: messageId, SystemId: systemId, SendUserId: sendUserId, GroupName: groupName, Code: code, Message: message, Data: data}, &Response{})
 	if err != nil {
-		_ = fmt.Errorf("failed to call: %v", err)
+		log.Errorf("failed to call: %v", err)
 	}
 }
 
@@ -81,7 +87,7 @@ func SendSystemBroadcast(systemId, messageId, sendUserId string, code int, messa
 
 	err := XClient.Broadcast(context.Background(), "Push2System", &Push2SystemArgs{MessageId: messageId, SystemId: systemId, SendUserId: sendUserId, Code: code, Message: message, Data: data}, &Response{})
 	if err != nil {
-		_ = fmt.Errorf("failed to call: %v", err)
+		log.Errorf("failed to call: %v", err)
 	}
 }
 
@@ -101,8 +107,7 @@ func GetOnlineListBroadcast(systemId *string, groupName *string) (clientIdList [
 			err := XClient.Call(context.Background(), "GetOnlineList", &GetGroupListArgs{SystemId: *systemId, GroupName: *groupName}, response)
 			_ = XClient.Close()
 			if err != nil {
-				_ = fmt.Errorf("failed to call: %v", add)
-
+				log.Errorf("failed to call: %v", err)
 			} else {
 				onlineListChan <- response.List
 			}

@@ -272,6 +272,42 @@ server {
 }
 ```
 
+#### 批量发送信息给指定客户端
+
+**请求地址：**/api/send_to_clients
+
+**请求方式：** POST
+
+**Content-Type：** application/json; charset=UTF-8
+
+**请求头Header**
+
+| 字段     | 类型   | 是否必须 | 说明     |
+| -------- | ------ | -------- | -------- |
+| systemId | string | 是       | 系统ID |
+
+**请求头Body**
+
+| 字段     | 类型   | 是否必须 | 说明     |
+| -------- | ------ | -------- | -------- |
+| clientIds | array | 是       | 客户端ID列表 |
+| sendUserId | string | 是       | 发送者ID |
+| code | integer | 是       | 自定义的状态码 |
+| msg | string | 是       | 自定义的状态消息 |
+| data | sring、array、object | 是       | 消息内容 |
+
+**响应示例：**
+
+```json
+{
+    "code": 0,
+    "msg": "success",
+    "data": {
+        "messageId": "5b4646dd8328f4b1"
+    }
+}
+```
+
 #### 绑定客户端到分组
 
 **请求地址：**/api/bind_to_group
@@ -388,8 +424,9 @@ server {
 - [x] 发送给指定客户端
 - [x] 发送给指定分组
 - [x] 上下线通知
-- [ ] 群广播
-- [ ] 错误日志
+- [x] 群广播
+- [x] 错误日志
+- [ ] 参数校验
 
 
 

@@ -2,10 +2,10 @@ package servers
 
 import (
 	"context"
-	"fmt"
 	"github.com/smallnest/rpcx/server"
 	"go-websocket/define"
 	"go-websocket/tools/util"
+	log "github.com/sirupsen/logrus"
 )
 
 type RPCServer struct {
@@ -59,19 +59,28 @@ type GroupListResponse struct {
 }
 
 func (s *RPCServer) Push2Client(ctx context.Context, args *Push2ClientArgs, response *Response) error {
-	fmt.Println(define.RPCPort + " 接收到RPC消息:发送指定客户端消息")
+	log.WithFields(log.Fields{
+		"host":       define.LocalHost,
+		"port":       define.Port,
+	}).Info("接收到RPC指定客户端消息")
 	SendMessage2LocalClient(args.MessageId, args.ClientId, args.SendUserId, args.Code, args.Message, &args.Data)
 	return nil
 }
 
 func (s *RPCServer) Push2Group(ctx context.Context, args *Push2GroupArgs, response *Response) error {
-	fmt.Println(define.RPCPort + " 接收到RPC消息:发送分组消息")
+	log.WithFields(log.Fields{
+		"host":       define.LocalHost,
+		"port":       define.Port,
+	}).Info("接收到RPC发送分组消息")
 	Manager.SendMessage2LocalGroup(args.SystemId, args.MessageId, args.SendUserId, args.GroupName, args.Code, args.Message, &args.Data)
 	return nil
 }
 
 func (s *RPCServer) Push2System(ctx context.Context, args *Push2SystemArgs, response *Response) error {
-	fmt.Println(define.RPCPort + " 接收到RPC消息:发送系统消息")
+	log.WithFields(log.Fields{
+		"host":       define.LocalHost,
+		"port":       define.Port,
+	}).Info("接收到RPC发送系统消息")
 	Manager.SendMessage2LocalSystem(args.SystemId, args.MessageId, args.SendUserId, args.Code, args.Message, &args.Data)
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"go-websocket/pkg/redis"
 	"go-websocket/routers"
 	"go-websocket/servers"
+	_ "go-websocket/tools/log"
 	"go-websocket/tools/readconfig"
 	"go-websocket/tools/util"
 	"net/http"
@@ -70,5 +71,6 @@ func getPort() string {
 		port = args[1];
 	}
 
+	define.Port = port
 	return port
 }

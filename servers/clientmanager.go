@@ -2,9 +2,10 @@ package servers
 
 import (
 	"errors"
+	log "github.com/sirupsen/logrus"
+	"go-websocket/define"
 	"go-websocket/define/retcode"
 	"go-websocket/tools/util"
-	"log"
 	"sync"
 	"time"
 )
@@ -54,7 +55,12 @@ func (manager *ClientManager) Start() {
 func (manager *ClientManager) EventConnect(client *Client) {
 	manager.AddClient(client)
 
-	log.Printf("客户端已连接: %s 总连接数：%d", client.ClientId, Manager.Count())
+	log.WithFields(log.Fields{
+		"host":     define.LocalHost,
+		"port":     define.Port,
+		"clientId": client.ClientId,
+		"counts":   Manager.Count(),
+	}).Info("客户端已连接")
 }
 
 // 断开连接时间
@@ -77,7 +83,13 @@ func (manager *ClientManager) EventDisconnect(client *Client) {
 	//标记销毁
 	client.IsDeleted = true
 
-	log.Printf("客户端已断开: %s 总连接数：%d 连接时间:%d秒 ", client.ClientId, Manager.Count(), uint64(time.Now().Unix())-client.ConnectTime)
+	log.WithFields(log.Fields{
+		"host":     define.LocalHost,
+		"port":     define.Port,
+		"clientId": client.ClientId,
+		"counts":   Manager.Count(),
+		"seconds":  uint64(time.Now().Unix()) - client.ConnectTime,
+	}).Info("客户端已断开")
 }
 
 // 添加客户端

@@ -2,12 +2,12 @@ package servers
 
 import (
 	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
 	"go-websocket/api"
 	"go-websocket/define"
 	"go-websocket/define/retcode"
 	"go-websocket/pkg/redis"
 	"go-websocket/tools/util"
-	"log"
 	"net/http"
 )
 
@@ -33,7 +33,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		},
 	}).Upgrade(w, r, nil)
 	if err != nil {
-		log.Print("upgrade:", err)
+		log.Errorf("upgrade error: %v", err)
 		http.NotFound(w, r)
 		return
 	}
