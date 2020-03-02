@@ -2,11 +2,11 @@ package servers
 
 import (
 	"context"
+	log "github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/client"
 	"go-websocket/define"
 	"go-websocket/pkg/redis"
 	"sync"
-	log "github.com/sirupsen/logrus"
 )
 
 //客户端列表
@@ -41,7 +41,7 @@ func getXClients() (XClient client.XClient) {
 	return
 }
 
-func SendRpc2Client(addr string, messageId, sendUserId, clientId string, message string, data *interface{}) {
+func SendRpc2Client(addr string, messageId, sendUserId, clientId string, code int, message string, data *interface{}) {
 	XClient := getXClient(addr)
 	defer XClient.Close()
 
@@ -52,7 +52,8 @@ func SendRpc2Client(addr string, messageId, sendUserId, clientId string, message
 		"clientId": clientId,
 		"msg":      (*data).(string),
 	}).Info("发送到服务器")
-	err := XClient.Call(context.Background(), "Push2Client", &Push2ClientArgs{MessageId: messageId, SendUserId: sendUserId, ClientId: clientId, Message: message, Data: data}, &Response{})
+	err := XClient.Call(context.Background(), "Push2Client", &Push2ClientArgs{MessageId: messageId, SendUserId: sendUserId, ClientId: clientId, Code: code, Message: message, Data: data}, &Response{})
+
 	if err != nil {
 		log.Errorf("failed to call: %v", err)
 	}

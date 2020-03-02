@@ -62,7 +62,7 @@ func SendMessage2Client(clientId string, sendUserId string, code int, msg string
 			SendMessage2LocalClient(messageId, clientId, sendUserId, code, msg, data)
 		} else {
 			//发送到指定机器
-			SendRpc2Client(addr, messageId, sendUserId, clientId, msg, data)
+			SendRpc2Client(addr, messageId, sendUserId, clientId, code, msg, data)
 		}
 	} else {
 		//如果是单机服务，则只发送到本机
