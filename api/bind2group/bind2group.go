@@ -12,21 +12,20 @@ type Controller struct {
 }
 
 type inputData struct {
-	ClientId  string `json:"clientId"`
-	GroupName string `json:"groupName"`
+	ClientId  string `json:"clientId" validate:"required"`
+	GroupName string `json:"groupName" validate:"required"`
 }
 
 func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
-	//解析参数
-	_ = r.ParseForm()
 	var inputData inputData
 	if err := json.NewDecoder(r.Body).Decode(&inputData); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err := api.Validate(inputData)
+	if (err != nil) {
+		api.Render(w, retcode.FAIL, err.Error(), []string{})
 		return
 	}
 

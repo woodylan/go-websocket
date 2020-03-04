@@ -10,6 +10,11 @@ import (
 
 func AccessTokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
 		//检查header是否设置SystemId
 		systemId := r.Header.Get("SystemId")
 		if len(systemId) == 0 {
