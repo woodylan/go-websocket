@@ -73,7 +73,7 @@ func SendMessage2Client(clientId string, sendUserId string, code int, msg string
 }
 
 //添加客户端到分组
-func AddClient2Group(systemId string, groupName string, clientId string) {
+func AddClient2Group(systemId string, groupName string, clientId string, userId string) {
 	//如果是集群则用redis共享数据
 	if util.IsCluster() {
 		//判断key是否存在
@@ -86,18 +86,18 @@ func AddClient2Group(systemId string, groupName string, clientId string) {
 		if isLocal {
 			if client, err := Manager.GetByClientId(clientId); err == nil {
 				//添加到本地
-				Manager.AddClient2LocalGroup(groupName, client)
+				Manager.AddClient2LocalGroup(groupName, client, userId)
 			} else {
 				log.Error(err)
 			}
 		} else {
 			//发送到指定的机器
-			SendRpcBindGroup(&addr, systemId, groupName, clientId)
+			SendRpcBindGroup(&addr, systemId, groupName, clientId, userId)
 		}
 	} else {
 		if client, err := Manager.GetByClientId(clientId); err == nil {
 			//如果是单机，就直接添加到本地group了
-			Manager.AddClient2LocalGroup(groupName, client)
+			Manager.AddClient2LocalGroup(groupName, client, userId)
 		};
 	}
 }

@@ -14,6 +14,7 @@ type Controller struct {
 type inputData struct {
 	ClientId  string `json:"clientId" validate:"required"`
 	GroupName string `json:"groupName" validate:"required"`
+	UserId    string `json:"userId"`
 }
 
 func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
@@ -31,7 +32,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 
 	if len(inputData.ClientId) > 0 && len(inputData.GroupName) > 0 {
 		systemId := r.Header.Get("systemId")
-		servers.AddClient2Group(systemId, inputData.GroupName, inputData.ClientId)
+		servers.AddClient2Group(systemId, inputData.GroupName, inputData.ClientId, inputData.UserId)
 	}
 
 	api.Render(w, retcode.SUCCESS, "success", []string{})

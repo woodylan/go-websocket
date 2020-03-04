@@ -104,6 +104,7 @@ func TestAddClient2LocalGroup(t *testing.T) {
 	}
 	clientId := "clientId"
 	systemId := "publishSystem"
+	userId := "userId"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
 	clientSocket := NewClient(clientId, systemId, conn)
@@ -112,12 +113,12 @@ func TestAddClient2LocalGroup(t *testing.T) {
 
 	Convey("测试添加分组", t, func() {
 		Convey("添加一个客户端到分组", func() {
-			manager.AddClient2LocalGroup(groupName, clientSocket)
+			manager.AddClient2LocalGroup(groupName, clientSocket, userId)
 			So(len(manager.Groups[util.GenGroupKey(systemId, groupName)]), ShouldEqual, 1)
 		})
 
 		Convey("再添加一个客户端到分组", func() {
-			manager.AddClient2LocalGroup(groupName, clientSocket)
+			manager.AddClient2LocalGroup(groupName, clientSocket, userId)
 			So(len(manager.Groups[util.GenGroupKey(systemId, groupName)]), ShouldEqual, 2)
 		})
 	})
@@ -126,6 +127,7 @@ func TestAddClient2LocalGroup(t *testing.T) {
 func TestGetGroupClientList(t *testing.T) {
 	clientId := "clientId"
 	systemId := "publishSystem"
+	userId := "userId"
 	var manager = NewClientManager() // 管理者
 	conn := &websocket.Conn{}
 	clientSocket := NewClient(clientId, systemId, conn)
@@ -134,7 +136,7 @@ func TestGetGroupClientList(t *testing.T) {
 
 	Convey("测试添加分组", t, func() {
 		Convey("获取一个存在的分组", func() {
-			manager.AddClient2LocalGroup(groupName, clientSocket)
+			manager.AddClient2LocalGroup(groupName, clientSocket, userId)
 			clientIds := manager.GetGroupClientList(util.GenGroupKey(systemId, groupName))
 			So(len(clientIds), ShouldEqual, 1)
 		})

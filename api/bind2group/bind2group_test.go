@@ -38,7 +38,7 @@ func TestRun(t *testing.T) {
 	s := newServer(t)
 	defer s.Close()
 
-	testContent := `{"clientId":"ade447d79f6489b5","groupName":"im"}`
+	testContent := `{"clientId":"ade447d79f6489b5","groupName":"im","userId":"userId"}`
 
 	resp, err := http.Post(s.ClientURL, "application/json", strings.NewReader(testContent))
 	Convey("测试发送绑定分组消息", t, func() {

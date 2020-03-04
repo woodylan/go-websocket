@@ -11,6 +11,7 @@ type Client struct {
 	Socket      *websocket.Conn // 用户连接
 	ConnectTime uint64          // 首次连接时间
 	IsDeleted   bool            // 是否删除或下线
+	UserId      string          // 业务端标识用户ID
 	GroupList   []string
 }
 
