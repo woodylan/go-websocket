@@ -61,8 +61,9 @@ type GroupListResponse struct {
 
 func (s *RPCServer) Push2Client(ctx context.Context, args *Push2ClientArgs, response *Response) error {
 	log.WithFields(log.Fields{
-		"host": define.LocalHost,
-		"port": define.Port,
+		"host":     define.LocalHost,
+		"port":     define.Port,
+		"clientId": args.ClientId,
 	}).Info("接收到RPC指定客户端消息")
 	SendMessage2LocalClient(args.MessageId, args.ClientId, args.SendUserId, args.Code, args.Message, &args.Data)
 	return nil
@@ -88,7 +89,12 @@ func (s *RPCServer) Push2System(ctx context.Context, args *Push2SystemArgs, resp
 
 //添加分组到group
 func (s *RPCServer) AddClient2Group(ctx context.Context, args *AddClient2GroupArgs, response *Response) error {
-	AddClient2Group(args.SystemId, args.GroupName, args.ClientId, args.UserId)
+	if client, err := Manager.GetByClientId(args.ClientId); err == nil {
+		//添加到本地
+		Manager.AddClient2LocalGroup(args.GroupName, client, args.UserId)
+	} else {
+		log.Error("添加分组失败" + err.Error())
+	}
 	return nil
 }
 

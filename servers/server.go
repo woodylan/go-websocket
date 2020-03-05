@@ -4,7 +4,6 @@ import (
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 	"go-websocket/define"
-	"go-websocket/pkg/redis"
 	"go-websocket/tools/util"
 	"net/http"
 	"time"
@@ -149,6 +148,11 @@ func GetOnlineList(systemId *string, groupName *string) map[string]interface{} {
 
 //通过本服务器发送信息
 func SendMessage2LocalClient(messageId, clientId string, sendUserId string, code int, msg string, data *interface{}) {
+	log.WithFields(log.Fields{
+		"host":     define.LocalHost,
+		"port":     define.Port,
+		"clientId": clientId,
+	}).Info("发送到通道")
 	ToClientChan <- clientInfo{ClientId: clientId, MessageId: messageId, SendUserId: sendUserId, Code: code, Msg: msg, Data: data}
 	return
 }
@@ -170,15 +174,8 @@ func WriteMessage() {
 			}).Info("发送到本机")
 			if conn, err := Manager.GetByClientId(clientInfo.ClientId); err == nil && conn != nil {
 				if err := Render(conn.Socket, clientInfo.MessageId, clientInfo.SendUserId, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
-					_ = conn.Socket.Close()
-					log.Println(err)
-					return
-				} else {
-					//延长key过期时间
-					_, err := redis.SetSurvivalTime(define.REDIS_CLIENT_ID_PREFIX+clientInfo.ClientId, define.REDIS_KEY_SURVIVAL_SECONDS)
-					if (err != nil) {
-						log.Println(err)
-					}
+					Manager.DisConnect <- conn
+					log.Error(err)
 				}
 			}
 		}
@@ -206,8 +203,7 @@ func PingTimer() {
 				//发送心跳
 				for clientId, conn := range Manager.AllClient() {
 					if err := conn.Socket.WriteControl(websocket.PingMessage, nil, time.Now().Add(10*time.Second)); err != nil {
-						_ = conn.Socket.Close()
-						Manager.DelClient(conn)
+						Manager.DisConnect <- conn
 						log.Printf("发送心跳失败: %s 总连接数：%d", clientId, Manager.Count())
 					}
 				}

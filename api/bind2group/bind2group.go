@@ -30,10 +30,8 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if len(inputData.ClientId) > 0 && len(inputData.GroupName) > 0 {
-		systemId := r.Header.Get("systemId")
-		servers.AddClient2Group(systemId, inputData.GroupName, inputData.ClientId, inputData.UserId)
-	}
+	systemId := r.Header.Get("systemId")
+	servers.AddClient2Group(systemId, inputData.GroupName, inputData.ClientId, inputData.UserId)
 
 	api.Render(w, retcode.SUCCESS, "success", []string{})
 }
