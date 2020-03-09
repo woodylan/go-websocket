@@ -1,6 +1,9 @@
 # Golang实现的分布式WebSocket微服务
 
 [![Go](https://img.shields.io/badge/Go-1.13-blue.svg)](https://golang.google.cn)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/woodylan/go-websocket)
+![Travis (.org)](https://api.travis-ci.com/woodylan/go-websocket.svg?branch=master)
+[![star](https://img.shields.io/github/stars/woodylan/go-websocket?style=social)](https://github.com/woodylan/go-websocket/stargazers)
 
 ## 简介
 
@@ -143,4 +146,5 @@ server {
 ## 沟通交流
 QQ群：1028314856
 
-<a target="_blank" href="//shang.qq.com/wpa/qunwpa?idkey=adbd35a10f2c25bd765a7830d17579f6e645634d22151b6d480d1b05026125e9"><img border="0" src="//pub.idqqimg.com/wpa/images/group.png" alt="Golang websocket分布式交" title="Golang websocket分布式交"></a>
+<a target="_blank" href="//shang.qq.com/wpa/qunwpa?idkey=adbd35a10f2c25bd765a7830d17579f6e645634d22151b6d480d1b05026125e9">
+<img border="0" src="http://pub.idqqimg.com/wpa/images/group.png" alt="Golang websocket分布式交" title="gorose-orm"></a>
