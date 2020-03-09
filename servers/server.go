@@ -175,7 +175,12 @@ func WriteMessage() {
 			if conn, err := Manager.GetByClientId(clientInfo.ClientId); err == nil && conn != nil {
 				if err := Render(conn.Socket, clientInfo.MessageId, clientInfo.SendUserId, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
 					Manager.DisConnect <- conn
-					log.Error(err)
+					log.WithFields(log.Fields{
+						"host":     define.LocalHost,
+						"port":     define.Port,
+						"clientId": clientInfo.ClientId,
+						"msg":      clientInfo.Msg,
+					}).Error("客户端异常离线：" + err.Error())
 				}
 			}
 		}
@@ -202,9 +207,9 @@ func PingTimer() {
 			case <-ticker.C:
 				//发送心跳
 				for clientId, conn := range Manager.AllClient() {
-					if err := conn.Socket.WriteControl(websocket.PingMessage, nil, time.Now().Add(10*time.Second)); err != nil {
+					if err := conn.Socket.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(time.Second)); err != nil {
 						Manager.DisConnect <- conn
-						log.Printf("发送心跳失败: %s 总连接数：%d", clientId, Manager.Count())
+						log.Errorf("发送心跳失败: %s 总连接数：%d", clientId, Manager.Count())
 					}
 				}
 			}

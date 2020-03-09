@@ -4,9 +4,12 @@ import (
 	"context"
 	log "github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/client"
+	"github.com/smallnest/rpcx/protocol"
+	"github.com/smallnest/rpcx/share"
 	"go-websocket/define"
 	"go-websocket/pkg/redis"
 	"sync"
+	"time"
 )
 
 //客户端列表
@@ -30,14 +33,28 @@ func getServerList() []*client.KVPair {
 //获取单台客户端
 func getXClient(addr string) (XClient client.XClient) {
 	d := client.NewPeer2PeerDiscovery(addr, "")
-	XClient = client.NewXClient("RPCServer", client.Failfast, client.RandomSelect, d, client.DefaultOption)
+	XClient = client.NewXClient("RPCServer", client.Failfast, client.RandomSelect, d, client.Option{
+		Retries:        3,
+		RPCPath:        share.DefaultRPCPath,
+		ConnectTimeout: 100 * time.Millisecond,
+		SerializeType:  protocol.MsgPack,
+		CompressType:   protocol.None,
+		BackupLatency:  10 * time.Millisecond,
+	})
 	return
 }
 
 //获取多台客户端
 func getXClients() (XClient client.XClient) {
 	d := client.NewMultipleServersDiscovery(getServerList())
-	XClient = client.NewXClient("RPCServer", client.Failtry, client.RandomSelect, d, client.DefaultOption)
+	XClient = client.NewXClient("RPCServer", client.Failtry, client.RandomSelect, d, client.Option{
+		Retries:        3,
+		RPCPath:        share.DefaultRPCPath,
+		ConnectTimeout: 100 * time.Millisecond,
+		SerializeType:  protocol.MsgPack,
+		CompressType:   protocol.None,
+		BackupLatency:  10 * time.Millisecond,
+	})
 	return
 }
 
