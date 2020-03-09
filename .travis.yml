@@ -4,6 +4,7 @@ go:
   - 1.13.x
 
 script:
+  - ls -lh
   - go test -v ./...
 
 before_deploy:
@@ -21,6 +22,9 @@ deploy:
     - go-websocket-linux-amd64.zip
     - go-websocket-windows-amd64.zip
     - go-websocket-darwin-amd64.zip
-  skip_cleanup: false
+  skip_cleanup: true
   on:
     tags: true
+
+after_deploy:
+  - ls -lh
