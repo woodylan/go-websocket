@@ -24,7 +24,7 @@
 
 ## SDK
 
-1. PHP版：https://github.com/woodylan/go-websocket-php-sdk>
+1. PHP版：https://github.com/woodylan/go-websocket-php-sdk
 
 
 
