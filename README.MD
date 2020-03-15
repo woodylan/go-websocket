@@ -1,9 +1,9 @@
 # Golang实现的分布式WebSocket微服务
 
-[![Go](https://img.shields.io/badge/Go-1.13-blue.svg)](https://golang.google.cn)
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/woodylan/go-websocket)
+![Go](https://img.shields.io/badge/Go-1.13-blue.svg)](https://golang.google.cn)
+![GitHub release](https://img.shields.io/github/v/release/woodylan/go-websocket)
 ![Travis (.org)](https://api.travis-ci.com/woodylan/go-websocket.svg?branch=master)
-[![star](https://img.shields.io/github/stars/woodylan/go-websocket?style=social)](https://github.com/woodylan/go-websocket/stargazers)
+![star](https://img.shields.io/github/stars/woodylan/go-websocket?style=social)](https://github.com/woodylan/go-websocket/stargazers)
 
 ## 简介
 
@@ -22,10 +22,22 @@
 
 
 
+## SDK
+
+PHP: <https://github.com/woodylan/go-websocket-php-sdk>
+
+
+
 
 ## 使用
 
 **下载本项目：**
+
+这里已经打包好了，下载相应的环境，支持Linux、Windows、MacOS环境。
+
+<https://github.com/woodylan/go-websocket/releases>
+
+**你也可以选择自己编译：**
 
 ```shell
 git clone https://github.com/woodylan/go-websocket.git
@@ -63,7 +75,7 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build
 
 ## 单机部署
 
-单机部署很简单，不需要配置Redis、RabbitMQ，只需要编译然后运行该二进制文件就可以了，步骤如上。
+单机部署很简单，不需要配置Redis，只需要编译然后运行该二进制文件就可以了，步骤如上。
 
 
 
