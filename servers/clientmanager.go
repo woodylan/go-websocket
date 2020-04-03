@@ -72,6 +72,7 @@ func (manager *ClientManager) EventDisconnect(client *Client) {
 	var data interface{} = map[string]string{
 		"clientId": client.ClientId,
 		"userId":   client.UserId,
+		"extend":   client.Extend,
 	}
 	sendUserId := ""
 
@@ -184,9 +185,11 @@ func (manager *ClientManager) SendMessage2LocalSystem(systemId, messageId string
 }
 
 // 添加到本地分组
-func (manager *ClientManager) AddClient2LocalGroup(groupName string, client *Client, userId string) {
+func (manager *ClientManager) AddClient2LocalGroup(groupName string, client *Client, userId string, extend string) {
 	//标记当前客户端的userId
 	client.UserId = userId
+	client.Extend = extend
+
 	// 为属性添加分组信息
 	groupKey := util.GenGroupKey(client.SystemId, groupName)
 
@@ -197,6 +200,7 @@ func (manager *ClientManager) AddClient2LocalGroup(groupName string, client *Cli
 	var data interface{} = map[string]string{
 		"clientId": client.ClientId,
 		"userId":   client.UserId,
+		"extend":   client.Extend,
 	}
 	sendUserId := ""
 

@@ -44,6 +44,7 @@ type AddClient2GroupArgs struct {
 	GroupName string
 	ClientId  string
 	UserId    string
+	Extend    string
 }
 
 type GetGroupListArgs struct {
@@ -91,7 +92,7 @@ func (s *RPCServer) Push2System(ctx context.Context, args *Push2SystemArgs, resp
 func (s *RPCServer) AddClient2Group(ctx context.Context, args *AddClient2GroupArgs, response *Response) error {
 	if client, err := Manager.GetByClientId(args.ClientId); err == nil {
 		//添加到本地
-		Manager.AddClient2LocalGroup(args.GroupName, client, args.UserId)
+		Manager.AddClient2LocalGroup(args.GroupName, client, args.UserId, args.Extend)
 	} else {
 		log.Error("添加分组失败" + err.Error())
 	}
@@ -106,7 +107,7 @@ func (s *RPCServer) GetOnlineList(ctx context.Context, args *GetGroupListArgs, r
 
 func InitRpcServer(port string) {
 	define.RPCPort = port
-	go createServer("tcp", ":"+port);
+	go createServer("tcp", ":"+port)
 	return
 }
 

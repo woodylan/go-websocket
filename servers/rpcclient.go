@@ -77,11 +77,11 @@ func SendRpc2Client(addr string, messageId, sendUserId, clientId string, code in
 }
 
 //绑定分组
-func SendRpcBindGroup(addr *string, systemId string, groupName string, clientId string, userId string) {
+func SendRpcBindGroup(addr *string, systemId string, groupName string, clientId string, userId string, extend string) {
 	XClient := getXClient(*addr)
 	defer XClient.Close()
 
-	err := XClient.Call(context.Background(), "AddClient2Group", &AddClient2GroupArgs{SystemId: systemId, GroupName: groupName, ClientId: clientId, UserId: userId}, &Response{})
+	err := XClient.Call(context.Background(), "AddClient2Group", &AddClient2GroupArgs{SystemId: systemId, GroupName: groupName, ClientId: clientId, UserId: userId, Extend: extend}, &Response{})
 	if err != nil {
 		log.Errorf("failed to call: %v", err)
 	}
