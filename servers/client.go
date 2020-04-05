@@ -34,14 +34,15 @@ func NewClient(clientId string, systemId string, socket *websocket.Conn) *Client
 
 func (c *Client) Read() {
 	go func() {
-	loop:
 		for {
 			messageType, _, err := c.Socket.ReadMessage()
 			if err != nil {
 				if messageType == -1 || messageType == websocket.CloseMessage {
 					//下线
 					Manager.DisConnect <- c
-					break loop
+					return
+				} else if messageType != websocket.PingMessage {
+					return
 				}
 			}
 		}

@@ -28,8 +28,8 @@ type ClientManager struct {
 func NewClientManager() (clientManager *ClientManager) {
 	clientManager = &ClientManager{
 		ClientIdMap:   make(map[string]*Client),
-		Connect:       make(chan *Client, 1000),
-		DisConnect:    make(chan *Client, 1000),
+		Connect:       make(chan *Client, 10000),
+		DisConnect:    make(chan *Client, 10000),
 		Groups:        make(map[string][]string, 100),
 		SystemClients: make(map[string][]string, 100),
 	}
@@ -210,15 +210,15 @@ func (manager *ClientManager) AddClient2LocalGroup(groupName string, client *Cli
 
 // 添加到本地分组
 func (manager *ClientManager) addClient2Group(groupKey string, client *Client) {
-	manager.GroupLock.RLock()
-	defer manager.GroupLock.RUnlock()
+	manager.GroupLock.Lock()
+	defer manager.GroupLock.Unlock()
 	manager.Groups[groupKey] = append(manager.Groups[groupKey], client.ClientId)
 }
 
 // 删除分组里的客户端
 func (manager *ClientManager) delGroupClient(groupKey string, clientId string) {
-	manager.GroupLock.RLock()
-	defer manager.GroupLock.RUnlock()
+	manager.GroupLock.Lock()
+	defer manager.GroupLock.Unlock()
 
 	for index, groupClientId := range manager.Groups[groupKey] {
 		if groupClientId == clientId {
@@ -236,15 +236,15 @@ func (manager *ClientManager) GetGroupClientList(groupKey string) []string {
 
 // 添加到系统客户端列表
 func (manager *ClientManager) AddClient2SystemClient(systemId string, client *Client) {
-	manager.SystemClientsLock.RLock()
-	defer manager.SystemClientsLock.RUnlock()
+	manager.SystemClientsLock.Lock()
+	defer manager.SystemClientsLock.Unlock()
 	manager.SystemClients[systemId] = append(manager.SystemClients[systemId], client.ClientId)
 }
 
 // 删除系统里的客户端
 func (manager *ClientManager) delSystemClient(client *Client) {
-	manager.SystemClientsLock.RLock()
-	defer manager.SystemClientsLock.RUnlock()
+	manager.SystemClientsLock.Lock()
+	defer manager.SystemClientsLock.Unlock()
 
 	for index, clientId := range manager.SystemClients[client.SystemId] {
 		if clientId == client.ClientId {
