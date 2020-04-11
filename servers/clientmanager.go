@@ -190,6 +190,13 @@ func (manager *ClientManager) AddClient2LocalGroup(groupName string, client *Cli
 	client.UserId = userId
 	client.Extend = extend
 
+	//判断之前是否有添加过
+	for _, groupValue := range client.GroupList {
+		if groupValue == groupName {
+			return
+		}
+	}
+
 	// 为属性添加分组信息
 	groupKey := util.GenGroupKey(client.SystemId, groupName)
 
