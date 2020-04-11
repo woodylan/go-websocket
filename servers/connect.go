@@ -4,9 +4,7 @@ import (
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 	"go-websocket/api"
-	"go-websocket/define"
 	"go-websocket/define/retcode"
-	"go-websocket/pkg/redis"
 	"go-websocket/tools/util"
 	"net/http"
 )
@@ -45,14 +43,6 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	systemId := r.FormValue("systemId")
 	if len(systemId) == 0 {
 		_ = Render(conn, "", "", retcode.SYSTEM_ID_ERROR, "系统ID不能为空", []string{})
-		_ = conn.Close()
-		return
-	}
-
-	//判断系统ID是否存在
-	jsonValue, err := redis.Get(define.REDIS_PREFIX_ACCOUNT_INFO + systemId)
-	if err != nil || len(jsonValue) == 0 {
-		_ = Render(conn, "", "", retcode.SYSTEM_ID_ERROR, "系统ID不正确", []string{})
 		_ = conn.Close()
 		return
 	}
