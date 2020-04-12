@@ -119,7 +119,7 @@ func TestAddClient2LocalGroup(t *testing.T) {
 
 		Convey("再添加一个客户端到分组", func() {
 			manager.AddClient2LocalGroup(groupName, clientSocket, userId, "")
-			So(len(manager.Groups[util.GenGroupKey(systemId, groupName)]), ShouldEqual, 2)
+			So(len(manager.Groups[util.GenGroupKey(systemId, groupName)]), ShouldEqual, 1)
 		})
 	})
 }
