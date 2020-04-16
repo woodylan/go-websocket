@@ -2,7 +2,7 @@ package define
 
 const (
 	//每组客户端数量限制
-	GROUP_CLIENT_LIMIT = 500;
+	GROUP_CLIENT_LIMIT = 500
 
 	//redis 分组里的客户端列表key
 	REDIS_KEY_GROUP = "ws-group-client-list:"

@@ -27,7 +27,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := api.Validate(inputData)
-	if (err != nil) {
+	if err != nil {
 		api.Render(w, retcode.FAIL, err.Error(), []string{})
 		return
 	}

@@ -137,9 +137,7 @@ func (manager *ClientManager) delClientIdMap(clientId string) {
 	manager.ClientIdMapLock.Lock()
 	defer manager.ClientIdMapLock.Unlock()
 
-	if _, ok := manager.ClientIdMap[clientId]; ok {
-		delete(manager.ClientIdMap, clientId)
-	}
+	delete(manager.ClientIdMap, clientId)
 }
 
 // 通过clientId获取

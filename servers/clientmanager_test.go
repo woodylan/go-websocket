@@ -136,7 +136,7 @@ func TestGetGroupClientList(t *testing.T) {
 
 	Convey("测试添加分组", t, func() {
 		Convey("获取一个存在的分组", func() {
-			manager.AddClient2LocalGroup(groupName, clientSocket, userId,"")
+			manager.AddClient2LocalGroup(groupName, clientSocket, userId, "")
 			clientIds := manager.GetGroupClientList(util.GenGroupKey(systemId, groupName))
 			So(len(clientIds), ShouldEqual, 1)
 		})

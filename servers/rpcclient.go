@@ -139,9 +139,7 @@ func GetOnlineListBroadcast(systemId *string, groupName *string) (clientIdList [
 	for i := 1; i <= len(serverList); i++ {
 		list, ok := <-onlineListChan
 		if ok {
-			for _, clientId := range list {
-				clientIdList = append(clientIdList, clientId)
-			}
+			clientIdList = append(clientIdList, list...)
 		} else {
 			return
 		}

@@ -22,7 +22,7 @@ func InitConfig() (err error) {
 	if strings.Contains(path, "servers") {
 		path += "/.."
 	} else {
-		for key, _ := range lasTwoPath {
+		for key := range lasTwoPath {
 			if strings.Contains(path, key) {
 				path += "/../.."
 				break
@@ -35,7 +35,7 @@ func InitConfig() (err error) {
 	}
 
 	cluster, err := ConfigData.Bool("common::cluster")
-	if (err != nil) {
+	if err != nil {
 		return err
 	}
 

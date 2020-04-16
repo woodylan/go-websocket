@@ -135,9 +135,7 @@ func GetOnlineList(systemId *string, groupName *string) map[string]interface{} {
 	} else {
 		//如果是单机服务，则只发送到本机
 		retList := Manager.GetGroupClientList(util.GenGroupKey(*systemId, *groupName))
-		for _, clientId := range retList {
-			clientList = append(clientList, clientId)
-		}
+		clientList = append(clientList, retList...)
 	}
 
 	return map[string]interface{}{
