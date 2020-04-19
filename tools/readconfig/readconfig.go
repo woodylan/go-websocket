@@ -16,6 +16,7 @@ func InitConfig() (err error) {
 		"send2group":    true,
 		"getonlinelist": true,
 		"register":      true,
+		"closeclient":   true,
 	}
 
 	path, _ := os.Getwd()

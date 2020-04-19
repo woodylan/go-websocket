@@ -76,6 +76,22 @@ func SendRpc2Client(addr string, messageId, sendUserId, clientId string, code in
 	}
 }
 
+func CloseRpcClient(addr string, clientId, systemId string) {
+	XClient := getXClient(addr)
+	defer XClient.Close()
+
+	log.WithFields(log.Fields{
+		"host":     define.LocalHost,
+		"port":     define.Port,
+		"add":      addr,
+		"clientId": clientId,
+	}).Info("发送关闭连接到服务器")
+	err := XClient.Call(context.Background(), "CloseClient", &CloseClientArgs{SystemId: systemId, ClientId: clientId}, &Response{})
+	if err != nil {
+		log.Errorf("failed to call: %v", err)
+	}
+}
+
 //绑定分组
 func SendRpcBindGroup(addr *string, systemId string, groupName string, clientId string, userId string, extend string) {
 	XClient := getXClient(*addr)

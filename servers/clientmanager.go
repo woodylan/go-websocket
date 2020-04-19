@@ -82,8 +82,6 @@ func (manager *ClientManager) EventDisconnect(client *Client) {
 			SendMessage2Group(client.SystemId, sendUserId, groupName, retcode.OFFLINE_MESSAGE_CODE, "客户端下线", &data)
 		}
 	}
-	//标记销毁
-	client.IsDeleted = true
 
 	log.WithFields(log.Fields{
 		"host":     define.LocalHost,
@@ -92,6 +90,10 @@ func (manager *ClientManager) EventDisconnect(client *Client) {
 		"counts":   Manager.Count(),
 		"seconds":  uint64(time.Now().Unix()) - client.ConnectTime,
 	}).Info("客户端已断开")
+
+	//标记销毁
+	client.IsDeleted = true
+	client = nil
 }
 
 // 添加客户端

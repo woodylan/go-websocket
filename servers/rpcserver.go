@@ -20,6 +20,11 @@ type Push2ClientArgs struct {
 	Data       interface{}
 }
 
+type CloseClientArgs struct {
+	SystemId string
+	ClientId string
+}
+
 type Push2GroupArgs struct {
 	MessageId  string
 	SystemId   string
@@ -67,6 +72,16 @@ func (s *RPCServer) Push2Client(ctx context.Context, args *Push2ClientArgs, resp
 		"clientId": args.ClientId,
 	}).Info("接收到RPC指定客户端消息")
 	SendMessage2LocalClient(args.MessageId, args.ClientId, args.SendUserId, args.Code, args.Message, &args.Data)
+	return nil
+}
+
+func (s *RPCServer) CloseClient(ctx context.Context, args *CloseClientArgs, response *Response) error {
+	log.WithFields(log.Fields{
+		"host":     define.LocalHost,
+		"port":     define.Port,
+		"clientId": args.ClientId,
+	}).Info("接收到RPC关闭连接")
+	CloseLocalClient(args.ClientId, args.SystemId)
 	return nil
 }
 

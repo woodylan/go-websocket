@@ -2,6 +2,7 @@ package routers
 
 import (
 	"go-websocket/api/bind2group"
+	"go-websocket/api/closeclient"
 	"go-websocket/api/getonlinelist"
 	"go-websocket/api/register"
 	"go-websocket/api/send2client"
@@ -18,6 +19,7 @@ func Init() {
 	sendToGroupHandler := &send2group.Controller{}
 	bindToGroupHandler := &bind2group.Controller{}
 	getGroupListHandler := &getonlinelist.Controller{}
+	closeClientHandler := &closeclient.Controller{}
 
 	http.HandleFunc("/api/register", registerHandler.Run)
 	http.HandleFunc("/api/send_to_client", AccessTokenMiddleware(sendToClientHandler.Run))
@@ -25,6 +27,7 @@ func Init() {
 	http.HandleFunc("/api/send_to_group", AccessTokenMiddleware(sendToGroupHandler.Run))
 	http.HandleFunc("/api/bind_to_group", AccessTokenMiddleware(bindToGroupHandler.Run))
 	http.HandleFunc("/api/get_online_list", AccessTokenMiddleware(getGroupListHandler.Run))
+	http.HandleFunc("/api/close_client", AccessTokenMiddleware(closeClientHandler.Run))
 
 	servers.StartWebSocket()
 

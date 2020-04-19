@@ -37,8 +37,7 @@ func (c *Client) Read() {
 		for {
 			messageType, _, err := c.Socket.ReadMessage()
 			if err != nil {
-				if messageType == -1 || messageType == websocket.CloseMessage {
-					//下线
+				if messageType == -1 && websocket.IsCloseError(err, websocket.CloseGoingAway, websocket.CloseNormalClosure, websocket.CloseNoStatusReceived) {
 					Manager.DisConnect <- c
 					return
 				} else if messageType != websocket.PingMessage {

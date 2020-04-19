@@ -222,3 +222,33 @@
     }
 }
 ```
+
+#### 发送指定连接
+
+**请求地址：**/api/close_client
+
+**请求方式：** POST
+
+**Content-Type：** application/json; charset=UTF-8
+
+**请求头Header**
+
+| 字段     | 类型   | 是否必须 | 说明     |
+| -------- | ------ | -------- | -------- |
+| systemId | string | 是       | 系统ID |
+
+**请求头Body**
+
+| 字段     | 类型   | 是否必须 | 说明     |
+| -------- | ------ | -------- | -------- |
+| clientId | string | 是       | 客户端ID |
+
+**响应示例：**
+
+```json
+{
+    "code": 0,
+    "msg": "success",
+    "data": {}
+}
+```
