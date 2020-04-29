@@ -2,6 +2,7 @@ package readconfig
 
 import (
 	"github.com/astaxie/beego/config"
+	"go-websocket/define"
 	"os"
 	"strings"
 )
@@ -38,6 +39,12 @@ func InitConfig() (err error) {
 	cluster, err := ConfigData.Bool("common::cluster")
 	if err != nil {
 		return err
+	}
+
+	etcdHost := ConfigData.String("etcd::host")
+	if len(etcdHost) > 0 {
+		define.EtcdEndpoints = make([]string, 0)
+		define.EtcdEndpoints = append(define.EtcdEndpoints, etcdHost)
 	}
 
 	//如果设置了集群

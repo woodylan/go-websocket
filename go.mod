@@ -4,9 +4,9 @@ go 1.13
 
 require (
 	github.com/astaxie/beego v1.12.0
+	github.com/coreos/etcd v3.3.17+incompatible
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
-	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/websocket v1.4.1
 	github.com/leodido/go-urn v1.2.0 // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.3.0+incompatible

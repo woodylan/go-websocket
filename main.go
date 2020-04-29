@@ -3,12 +3,13 @@ package main
 import (
 	"fmt"
 	"go-websocket/define"
-	"go-websocket/pkg/redis"
+	"go-websocket/pkg/etcd"
 	"go-websocket/routers"
 	"go-websocket/servers"
 	_ "go-websocket/tools/log"
 	"go-websocket/tools/readconfig"
 	"go-websocket/tools/util"
+	"net"
 	"net/http"
 	"os"
 )
@@ -27,7 +28,7 @@ func main() {
 	//记录本机内网IP地址
 	define.LocalHost = util.GetIntranetIp()
 
-	//将服务器地址、端口注册到redis中
+	//将服务器地址、端口注册到etcd中
 	registerServer()
 
 	//初始化路由
@@ -53,10 +54,27 @@ func initRPCServer(port string) {
 	}
 }
 
-//将服务器地址、端口注册到redis中
+//ETCD注册发现服务
 func registerServer() {
 	if util.IsCluster() {
-		_, err := redis.SetAdd(define.REDIS_KEY_SERVER_LIST, define.LocalHost+":"+define.RPCPort)
+		//注册租约
+		ser, err := etcd.NewServiceReg(define.EtcdEndpoints, 5)
+		if err != nil {
+			panic(err)
+		}
+
+		hostPort := net.JoinHostPort(define.LocalHost, define.RPCPort)
+		//添加key
+		err = ser.PutService(define.ETCD_SERVER_LIST+hostPort, hostPort)
+		if err != nil {
+			panic(err)
+		}
+
+		cli, err := etcd.NewClientDis(define.EtcdEndpoints)
+		if err != nil {
+			panic(err)
+		}
+		_, err = cli.GetService(define.ETCD_SERVER_LIST)
 		if err != nil {
 			panic(err)
 		}

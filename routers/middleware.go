@@ -4,7 +4,7 @@ import (
 	"go-websocket/api"
 	"go-websocket/define"
 	"go-websocket/define/retcode"
-	"go-websocket/pkg/redis"
+	"go-websocket/pkg/etcd"
 	"net/http"
 )
 
@@ -22,14 +22,14 @@ func AccessTokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		//校验token是否合格
-		systemName, err := redis.Get(define.REDIS_PREFIX_ACCOUNT_INFO + systemId)
+		//判断是否被注册
+		resp, err := etcd.Get(define.ETCD_PREFIX_ACCOUNT_INFO + systemId)
 		if err != nil {
-			api.Render(w, retcode.FAIL, "redis服务器错误", []string{})
+			api.Render(w, retcode.FAIL, "etcd服务器错误", []string{})
 			return
 		}
 
-		if len(systemName) == 0 {
+		if resp.Count == 0 {
 			api.Render(w, retcode.FAIL, "系统ID无效", []string{})
 			return
 		}

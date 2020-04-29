@@ -7,23 +7,17 @@ import (
 	"github.com/smallnest/rpcx/protocol"
 	"github.com/smallnest/rpcx/share"
 	"go-websocket/define"
-	"go-websocket/pkg/redis"
 	"sync"
 	"time"
 )
 
 //客户端列表
 func getServerList() []*client.KVPair {
-	serverList, err := redis.SMEMBERS(define.REDIS_KEY_SERVER_LIST)
-	if err != nil {
-		log.Errorf("failed to get server list: %v", err)
-		return []*client.KVPair{
-			{Key: define.LocalHost + ":" + define.RPCPort},
-		}
-	}
-
 	var clientList []*client.KVPair
-	for _, host := range serverList {
+
+	define.ServerListLock.Lock()
+	defer define.ServerListLock.Unlock()
+	for _, host := range define.ServerList {
 		clientList = append(clientList, &client.KVPair{Key: host})
 	}
 
