@@ -7,6 +7,8 @@ import (
 	"github.com/smallnest/rpcx/protocol"
 	"github.com/smallnest/rpcx/share"
 	"go-websocket/define"
+	"go-websocket/servers/pb"
+	"google.golang.org/grpc"
 	"sync"
 	"time"
 )
@@ -52,7 +54,28 @@ func getXClients() (XClient client.XClient) {
 	return
 }
 
-func SendRpc2Client(addr string, messageId, sendUserId, clientId string, code int, message string, data *interface{}) {
+func SendRpc2Client(addr string, messageId, sendUserId, clientId string, code int, message string, data *string) {
+	conn, err := grpc.Dial(addr, grpc.WithInsecure())
+	if err != nil {
+		log.Errorf("did not connect: %v", err)
+	}
+	defer conn.Close()
+
+	c := pb.NewCommonServiceClient(conn)
+	_, err = c.Send2Client(context.Background(), &pb.Send2ClientReq{
+		MessageId:  messageId,
+		SendUserId: sendUserId,
+		ClientId:   clientId,
+		Code:       int32(code),
+		Message:    message,
+		Data:       *data,
+	})
+	if err != nil {
+		log.Errorf("failed to call: %v", err)
+	}
+}
+
+func SendRpc2Client1(addr string, messageId, sendUserId, clientId string, code int, message string, data *string) {
 	XClient := getXClient(addr)
 	defer XClient.Close()
 
@@ -61,9 +84,9 @@ func SendRpc2Client(addr string, messageId, sendUserId, clientId string, code in
 		"port":     define.Port,
 		"add":      addr,
 		"clientId": clientId,
-		"msg":      (*data).(string),
+		"msg":      data,
 	}).Info("发送到服务器")
-	err := XClient.Call(context.Background(), "Push2Client", &Push2ClientArgs{MessageId: messageId, SendUserId: sendUserId, ClientId: clientId, Code: code, Message: message, Data: data}, &Response{})
+	err := XClient.Call(context.Background(), "Push2Client", &Push2ClientArgs{MessageId: messageId, SendUserId: sendUserId, ClientId: clientId, Code: code, Message: message, Data: *data}, &Response{})
 
 	if err != nil {
 		log.Errorf("failed to call: %v", err)
@@ -98,22 +121,22 @@ func SendRpcBindGroup(addr *string, systemId string, groupName string, clientId 
 }
 
 //发送分组消息
-func SendGroupBroadcast(systemId string, messageId, sendUserId, groupName string, code int, message string, data *interface{}) {
+func SendGroupBroadcast(systemId string, messageId, sendUserId, groupName string, code int, message string, data *string) {
 	XClient := getXClients()
 	defer XClient.Close()
 
-	err := XClient.Broadcast(context.Background(), "Push2Group", &Push2GroupArgs{MessageId: messageId, SystemId: systemId, SendUserId: sendUserId, GroupName: groupName, Code: code, Message: message, Data: data}, &Response{})
+	err := XClient.Broadcast(context.Background(), "Push2Group", &Push2GroupArgs{MessageId: messageId, SystemId: systemId, SendUserId: sendUserId, GroupName: groupName, Code: code, Message: message, Data: *data}, &Response{})
 	if err != nil {
 		log.Errorf("failed to call: %v", err)
 	}
 }
 
 //发送系统信息
-func SendSystemBroadcast(systemId, messageId, sendUserId string, code int, message string, data *interface{}) {
+func SendSystemBroadcast(systemId, messageId, sendUserId string, code int, message string, data *string) {
 	XClient := getXClients()
 	defer XClient.Close()
 
-	err := XClient.Broadcast(context.Background(), "Push2System", &Push2SystemArgs{MessageId: messageId, SystemId: systemId, SendUserId: sendUserId, Code: code, Message: message, Data: data}, &Response{})
+	err := XClient.Broadcast(context.Background(), "Push2System", &Push2SystemArgs{MessageId: messageId, SystemId: systemId, SendUserId: sendUserId, Code: code, Message: message, Data: *data}, &Response{})
 	if err != nil {
 		log.Errorf("failed to call: %v", err)
 	}

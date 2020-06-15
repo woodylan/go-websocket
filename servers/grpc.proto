@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option go_package = "servers/pb";
+
+message Send2ClientReq {
+    string messageId = 1;
+    string sendUserId = 2;
+    string clientId = 3;
+    int32 code = 4;
+    string message = 5;
+    string data = 6;
+}
+
+message Send2ClientReply {
+}
+
+service CommonService {
+    rpc Send2Client (Send2ClientReq) returns (Send2ClientReply){}
+}

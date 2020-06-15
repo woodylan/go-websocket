@@ -49,7 +49,7 @@ func initRPCServer(port string) {
 	if util.IsCluster() {
 		//初始化RPC服务
 		rpcPort := util.GenRpcPort(port)
-		servers.InitRpcServer(rpcPort)
+		servers.InitGRpcServer(rpcPort)
 		fmt.Printf("启动RPC，端口号：%s\n", rpcPort)
 	}
 }

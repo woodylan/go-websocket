@@ -19,7 +19,7 @@ type clientInfo struct {
 	MessageId  string
 	Code       int
 	Msg        string
-	Data       *interface{}
+	Data       *string
 }
 
 type RetData struct {
@@ -47,7 +47,7 @@ func StartWebSocket() {
 }
 
 //发送信息到指定客户端
-func SendMessage2Client(clientId string, sendUserId string, code int, msg string, data *interface{}) (messageId string) {
+func SendMessage2Client(clientId string, sendUserId string, code int, msg string, data *string) (messageId string) {
 	messageId = util.GenUUID()
 	if util.IsCluster() {
 		addr, _, _, isLocal, err := util.GetAddrInfoAndIsLocal(clientId)
@@ -126,7 +126,7 @@ func AddClient2Group(systemId string, groupName string, clientId string, userId 
 }
 
 //发送信息到指定分组
-func SendMessage2Group(systemId, sendUserId, groupName string, code int, msg string, data *interface{}) (messageId string) {
+func SendMessage2Group(systemId, sendUserId, groupName string, code int, msg string, data *string) (messageId string) {
 	messageId = util.GenUUID()
 	if util.IsCluster() {
 		//发送分组消息给指定广播
@@ -139,7 +139,7 @@ func SendMessage2Group(systemId, sendUserId, groupName string, code int, msg str
 }
 
 //发送信息到指定系统
-func SendMessage2System(systemId, sendUserId string, code int, msg string, data interface{}) {
+func SendMessage2System(systemId, sendUserId string, code int, msg string, data string) {
 	messageId := util.GenUUID()
 	if util.IsCluster() {
 		//发送到系统广播
@@ -169,7 +169,7 @@ func GetOnlineList(systemId *string, groupName *string) map[string]interface{} {
 }
 
 //通过本服务器发送信息
-func SendMessage2LocalClient(messageId, clientId string, sendUserId string, code int, msg string, data *interface{}) {
+func SendMessage2LocalClient(messageId, clientId string, sendUserId string, code int, msg string, data *string) {
 	log.WithFields(log.Fields{
 		"host":     define.LocalHost,
 		"port":     define.Port,

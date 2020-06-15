@@ -5,7 +5,10 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/smallnest/rpcx/server"
 	"go-websocket/define"
+	"go-websocket/servers/pb"
 	"go-websocket/tools/util"
+	"google.golang.org/grpc"
+	"net"
 )
 
 type RPCServer struct {
@@ -17,7 +20,7 @@ type Push2ClientArgs struct {
 	SendUserId string
 	Code       int
 	Message    string
-	Data       interface{}
+	Data       string
 }
 
 type CloseClientArgs struct {
@@ -32,7 +35,7 @@ type Push2GroupArgs struct {
 	GroupName  string
 	Code       int
 	Message    string
-	Data       interface{}
+	Data       string
 }
 
 type Push2SystemArgs struct {
@@ -41,7 +44,7 @@ type Push2SystemArgs struct {
 	SendUserId string
 	Code       int
 	Message    string
-	Data       interface{}
+	Data       string
 }
 
 type AddClient2GroupArgs struct {
@@ -63,6 +66,13 @@ type Response struct {
 
 type GroupListResponse struct {
 	List []string
+}
+
+type CommonServiceServer struct{}
+
+func (this *CommonServiceServer) Send2Client(ctx context.Context, req *pb.Send2ClientReq) (*pb.Send2ClientReply, error) {
+	SendMessage2LocalClient(req.MessageId, req.ClientId, req.SendUserId, int(req.Code), req.Message, &req.Data)
+	return &pb.Send2ClientReply{}, nil
 }
 
 func (s *RPCServer) Push2Client(ctx context.Context, args *Push2ClientArgs, response *Response) error {
@@ -118,6 +128,26 @@ func (s *RPCServer) AddClient2Group(ctx context.Context, args *AddClient2GroupAr
 func (s *RPCServer) GetOnlineList(ctx context.Context, args *GetGroupListArgs, response *GroupListResponse) error {
 	response.List = Manager.GetGroupClientList(util.GenGroupKey(args.SystemId, args.GroupName))
 	return nil
+}
+
+func InitGRpcServer(port string) {
+	define.RPCPort = port
+	go createGRPCServer(":" + port)
+}
+
+func createGRPCServer(port string) {
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		panic(err)
+	}
+
+	s := grpc.NewServer()
+	pb.RegisterCommonServiceServer(s, &CommonServiceServer{})
+
+	err = s.Serve(lis)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func InitRpcServer(port string) {

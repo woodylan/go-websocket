@@ -1,6 +1,7 @@
 package servers
 
 import (
+	"encoding/json"
 	"errors"
 	log "github.com/sirupsen/logrus"
 	"go-websocket/define"
@@ -69,11 +70,12 @@ func (manager *ClientManager) EventDisconnect(client *Client) {
 	_ = client.Socket.Close()
 	manager.DelClient(client)
 
-	var data interface{} = map[string]string{
+	mJson, _ := json.Marshal(map[string]string{
 		"clientId": client.ClientId,
 		"userId":   client.UserId,
 		"extend":   client.Extend,
-	}
+	})
+	data := string(mJson)
 	sendUserId := ""
 
 	//发送下线通知
@@ -155,7 +157,7 @@ func (manager *ClientManager) GetByClientId(clientId string) (*Client, error) {
 }
 
 // 发送到本机分组
-func (manager *ClientManager) SendMessage2LocalGroup(systemId, messageId, sendUserId, groupName string, code int, msg string, data *interface{}) {
+func (manager *ClientManager) SendMessage2LocalGroup(systemId, messageId, sendUserId, groupName string, code int, msg string, data *string) {
 	if len(groupName) > 0 {
 		clientIds := manager.GetGroupClientList(util.GenGroupKey(systemId, groupName))
 		if len(clientIds) > 0 {
@@ -173,7 +175,7 @@ func (manager *ClientManager) SendMessage2LocalGroup(systemId, messageId, sendUs
 }
 
 //发送给指定业务系统
-func (manager *ClientManager) SendMessage2LocalSystem(systemId, messageId string, sendUserId string, code int, msg string, data *interface{}) {
+func (manager *ClientManager) SendMessage2LocalSystem(systemId, messageId string, sendUserId string, code int, msg string, data *string) {
 	if len(systemId) > 0 {
 		clientIds := Manager.GetSystemClientList(systemId)
 		if len(clientIds) > 0 {
@@ -204,11 +206,12 @@ func (manager *ClientManager) AddClient2LocalGroup(groupName string, client *Cli
 
 	client.GroupList = append(client.GroupList, groupName)
 
-	var data interface{} = map[string]string{
+	mJson, _ := json.Marshal(map[string]string{
 		"clientId": client.ClientId,
 		"userId":   client.UserId,
 		"extend":   client.Extend,
-	}
+	})
+	data := string(mJson)
 	sendUserId := ""
 
 	//发送系统通知
