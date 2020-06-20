@@ -3,17 +3,82 @@ syntax = "proto3";
 option go_package = "servers/pb";
 
 message Send2ClientReq {
-    string messageId = 1;
-    string sendUserId = 2;
+    string systemId = 1;
+    string messageId = 2;
+    string sendUserId = 3;
+    string clientId = 4;
+    int32 code = 5;
+    string message = 6;
+    string data = 7;
+}
+
+message CloseClientReq {
+    string systemId = 1;
+    string clientId = 2;
+}
+
+message BindGroupReq {
+    string systemId = 1;
+    string groupName = 2;
     string clientId = 3;
+    string userId = 4;
+    string extend = 5;
+}
+
+message Send2GroupReq {
+    string systemId = 1;
+    string messageId = 2;
+    string sendUserId = 3;
+    string groupName = 4;
+    int32 code = 5;
+    string message = 6;
+    string data = 7;
+}
+
+message Send2SystemReq {
+    string systemId = 1;
+    string messageId = 2;
+    string sendUserId = 3;
     int32 code = 4;
     string message = 5;
     string data = 6;
 }
 
+message GetGroupClientsReq {
+    string systemId = 1;
+    string groupName = 2;
+}
+
 message Send2ClientReply {
 }
 
+message CloseClientReply {
+}
+
+message BindGroupReply {
+}
+
+message Send2GroupReply {
+}
+
+message Send2SystemReply {
+}
+
+message GetGroupClientsReply {
+    repeated string list = 1;
+}
+
 service CommonService {
-    rpc Send2Client (Send2ClientReq) returns (Send2ClientReply){}
+    rpc Send2Client (Send2ClientReq) returns (Send2ClientReply) {
+    }
+    rpc CloseClient (CloseClientReq) returns (CloseClientReply) {
+    }
+    rpc BindGroup (BindGroupReq) returns (BindGroupReply) {
+    }
+    rpc Send2Group (Send2GroupReq) returns (Send2GroupReply) {
+    }
+    rpc Send2System (Send2SystemReq) returns (Send2SystemReply) {
+    }
+    rpc GetGroupClients (GetGroupClientsReq) returns (GetGroupClientsReply) {
+    }
 }

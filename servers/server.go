@@ -115,7 +115,7 @@ func AddClient2Group(systemId string, groupName string, clientId string, userId 
 			}
 		} else {
 			//发送到指定的机器
-			SendRpcBindGroup(&addr, systemId, groupName, clientId, userId, extend)
+			SendRpcBindGroup(addr, systemId, groupName, clientId, userId, extend)
 		}
 	} else {
 		if client, err := Manager.GetByClientId(clientId); err == nil {

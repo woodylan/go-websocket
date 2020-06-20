@@ -81,7 +81,7 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build
 
 ## 分布式部署
 
-**安装Redis：** 参考网上教程
+**安装ETCD：** 参考网上教程
 
 
 
@@ -96,10 +96,8 @@ cluster = true
 # 对称加密key 16位
 crypto_key = xxxxxxxxxxxxxxxx
 
-[redis]
-host = 127.0.0.1
-port = 6379
-password =
+[etcd]
+host = 127.0.0.1:2379
 ```
 
 **运行项目：**
