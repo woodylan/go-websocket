@@ -12,11 +12,11 @@ type Controller struct {
 }
 
 type inputData struct {
-	ClientId   string      `json:"clientId" validate:"required"`
-	SendUserId string      `json:"sendUserId"`
-	Code       int         `json:"code"`
-	Msg        string      `json:"msg"`
-	Data       interface{} `json:"data"`
+	ClientId   string `json:"clientId" validate:"required"`
+	SendUserId string `json:"sendUserId"`
+	Code       int    `json:"code"`
+	Msg        string `json:"msg"`
+	Data       string `json:"data"`
 }
 
 func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {

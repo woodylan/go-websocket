@@ -3,135 +3,86 @@ package servers
 import (
 	"context"
 	log "github.com/sirupsen/logrus"
-	"github.com/smallnest/rpcx/server"
 	"go-websocket/define"
+	"go-websocket/servers/pb"
 	"go-websocket/tools/util"
+	"google.golang.org/grpc"
+	"net"
 )
 
-type RPCServer struct {
-}
+type CommonServiceServer struct{}
 
-type Push2ClientArgs struct {
-	MessageId  string
-	ClientId   string
-	SendUserId string
-	Code       int
-	Message    string
-	Data       interface{}
-}
-
-type CloseClientArgs struct {
-	SystemId string
-	ClientId string
-}
-
-type Push2GroupArgs struct {
-	MessageId  string
-	SystemId   string
-	SendUserId string
-	GroupName  string
-	Code       int
-	Message    string
-	Data       interface{}
-}
-
-type Push2SystemArgs struct {
-	MessageId  string
-	SystemId   string
-	SendUserId string
-	Code       int
-	Message    string
-	Data       interface{}
-}
-
-type AddClient2GroupArgs struct {
-	SystemId  string
-	GroupName string
-	ClientId  string
-	UserId    string
-	Extend    string
-}
-
-type GetGroupListArgs struct {
-	SystemId  string
-	GroupName string
-}
-
-type Response struct {
-	Success bool
-}
-
-type GroupListResponse struct {
-	List []string
-}
-
-func (s *RPCServer) Push2Client(ctx context.Context, args *Push2ClientArgs, response *Response) error {
+func (this *CommonServiceServer) Send2Client(ctx context.Context, req *pb.Send2ClientReq) (*pb.Send2ClientReply, error) {
 	log.WithFields(log.Fields{
 		"host":     define.LocalHost,
 		"port":     define.Port,
-		"clientId": args.ClientId,
+		"clientId": req.ClientId,
 	}).Info("接收到RPC指定客户端消息")
-	SendMessage2LocalClient(args.MessageId, args.ClientId, args.SendUserId, args.Code, args.Message, &args.Data)
-	return nil
+	SendMessage2LocalClient(req.MessageId, req.ClientId, req.SendUserId, int(req.Code), req.Message, &req.Data)
+	return &pb.Send2ClientReply{}, nil
 }
 
-func (s *RPCServer) CloseClient(ctx context.Context, args *CloseClientArgs, response *Response) error {
+func (this *CommonServiceServer) CloseClient(ctx context.Context, req *pb.CloseClientReq) (*pb.CloseClientReply, error) {
 	log.WithFields(log.Fields{
 		"host":     define.LocalHost,
 		"port":     define.Port,
-		"clientId": args.ClientId,
+		"clientId": req.ClientId,
 	}).Info("接收到RPC关闭连接")
-	CloseLocalClient(args.ClientId, args.SystemId)
-	return nil
+	CloseLocalClient(req.ClientId, req.SystemId)
+	return &pb.CloseClientReply{}, nil
 }
 
-func (s *RPCServer) Push2Group(ctx context.Context, args *Push2GroupArgs, response *Response) error {
+//添加分组到group
+func (this *CommonServiceServer) BindGroup(ctx context.Context, req *pb.BindGroupReq) (*pb.BindGroupReply, error) {
+	if client, err := Manager.GetByClientId(req.ClientId); err == nil {
+		//添加到本地
+		Manager.AddClient2LocalGroup(req.GroupName, client, req.UserId, req.Extend)
+	} else {
+		log.Error("添加分组失败" + err.Error())
+	}
+	return &pb.BindGroupReply{}, nil
+}
+
+func (this *CommonServiceServer) Send2Group(ctx context.Context, req *pb.Send2GroupReq) (*pb.Send2GroupReply, error) {
 	log.WithFields(log.Fields{
 		"host": define.LocalHost,
 		"port": define.Port,
 	}).Info("接收到RPC发送分组消息")
-	Manager.SendMessage2LocalGroup(args.SystemId, args.MessageId, args.SendUserId, args.GroupName, args.Code, args.Message, &args.Data)
-	return nil
+	Manager.SendMessage2LocalGroup(req.SystemId, req.MessageId, req.SendUserId, req.GroupName, int(req.Code), req.Message, &req.Data)
+	return &pb.Send2GroupReply{}, nil
 }
 
-func (s *RPCServer) Push2System(ctx context.Context, args *Push2SystemArgs, response *Response) error {
+func (this *CommonServiceServer) Send2System(ctx context.Context, req *pb.Send2SystemReq) (*pb.Send2SystemReply, error) {
 	log.WithFields(log.Fields{
 		"host": define.LocalHost,
 		"port": define.Port,
 	}).Info("接收到RPC发送系统消息")
-	Manager.SendMessage2LocalSystem(args.SystemId, args.MessageId, args.SendUserId, args.Code, args.Message, &args.Data)
-	return nil
-}
-
-//添加分组到group
-func (s *RPCServer) AddClient2Group(ctx context.Context, args *AddClient2GroupArgs, response *Response) error {
-	if client, err := Manager.GetByClientId(args.ClientId); err == nil {
-		//添加到本地
-		Manager.AddClient2LocalGroup(args.GroupName, client, args.UserId, args.Extend)
-	} else {
-		log.Error("添加分组失败" + err.Error())
-	}
-	return nil
+	Manager.SendMessage2LocalSystem(req.SystemId, req.MessageId, req.SendUserId, int(req.Code), req.Message, &req.Data)
+	return &pb.Send2SystemReply{}, nil
 }
 
 //获取分组在线用户列表
-func (s *RPCServer) GetOnlineList(ctx context.Context, args *GetGroupListArgs, response *GroupListResponse) error {
-	response.List = Manager.GetGroupClientList(util.GenGroupKey(args.SystemId, args.GroupName))
-	return nil
+func (this *CommonServiceServer) GetGroupClients(ctx context.Context, req *pb.GetGroupClientsReq) (*pb.GetGroupClientsReply, error) {
+	response := pb.GetGroupClientsReply{}
+	response.List = Manager.GetGroupClientList(util.GenGroupKey(req.SystemId, req.GroupName))
+	return &response, nil
 }
 
-func InitRpcServer(port string) {
+func InitGRpcServer(port string) {
 	define.RPCPort = port
-	go createServer("tcp", ":"+port)
+	go createGRPCServer(":" + port)
 }
 
-func createServer(network string, address string) {
-	s := server.NewServer()
-	err := s.Register(new(RPCServer), "")
+func createGRPCServer(port string) {
+	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		panic(err)
 	}
-	err = s.Serve(network, address)
+
+	s := grpc.NewServer()
+	pb.RegisterCommonServiceServer(s, &CommonServiceServer{})
+
+	err = s.Serve(lis)
 	if err != nil {
 		panic(err)
 	}
