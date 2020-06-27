@@ -5,7 +5,7 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/mvcc/mvccpb"
 	log "github.com/sirupsen/logrus"
-	"go-websocket/define"
+	"go-websocket/configs"
 	"time"
 )
 
@@ -14,7 +14,6 @@ type ClientDis struct {
 }
 
 func NewClientDis(addr []string) (*ClientDis, error) {
-	define.ServerList = make(map[string]string)
 	conf := clientv3.Config{
 		Endpoints:   addr,
 		DialTimeout: 5 * time.Second,
@@ -68,15 +67,15 @@ func (this *ClientDis) extractAddrs(resp *clientv3.GetResponse) []string {
 }
 
 func (this *ClientDis) SetServiceList(key, val string) {
-	define.ServerListLock.Lock()
-	defer define.ServerListLock.Unlock()
-	define.ServerList[key] = val
+	configs.Conf.ServerListLock.Lock()
+	defer configs.Conf.ServerListLock.Unlock()
+	configs.Conf.ServerList[key] = val
 	log.Info("发现服务：", key, " 地址:", val)
 }
 
 func (this *ClientDis) DelServiceList(key string) {
-	define.ServerListLock.Lock()
-	defer define.ServerListLock.Unlock()
-	delete(define.ServerList, key)
+	configs.Conf.ServerListLock.Lock()
+	defer configs.Conf.ServerListLock.Unlock()
+	delete(configs.Conf.ServerList, key)
 	log.Println("服务下线:", key)
 }

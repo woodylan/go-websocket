@@ -3,7 +3,7 @@ package servers
 import (
 	"github.com/gorilla/websocket"
 	. "github.com/smartystreets/goconvey/convey"
-	"go-websocket/tools/readconfig"
+	"go-websocket/configs"
 	"go-websocket/tools/util"
 	"testing"
 )
@@ -99,7 +99,7 @@ func TestGetByClientId(t *testing.T) {
 }
 
 func TestAddClient2LocalGroup(t *testing.T) {
-	if err := readconfig.InitConfig(); err != nil {
+	if err := configs.InitConfig(); err != nil {
 		panic(err)
 	}
 	clientId := "clientId"

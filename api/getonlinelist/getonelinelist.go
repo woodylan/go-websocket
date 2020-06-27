@@ -31,7 +31,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	systemId := r.Header.Get("systemId")
+	systemId := r.Header.Get("SystemId")
 	ret := servers.GetOnlineList(&systemId, &inputData.GroupName)
 
 	api.Render(w, retcode.SUCCESS, "success", ret)

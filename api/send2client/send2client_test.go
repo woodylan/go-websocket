@@ -3,7 +3,7 @@ package send2client
 import (
 	"encoding/json"
 	. "github.com/smartystreets/goconvey/convey"
-	"go-websocket/tools/readconfig"
+	"go-websocket/configs"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -24,7 +24,7 @@ type retMessage struct {
 func newServer(t *testing.T) *testServer {
 	var s testServer
 
-	if err := readconfig.InitConfig(); err != nil {
+	if err := configs.InitConfig(); err != nil {
 		panic(err)
 	}
 

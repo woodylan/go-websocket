@@ -3,10 +3,8 @@ package util
 import (
 	"errors"
 	uuid "github.com/satori/go.uuid"
-	"go-websocket/define"
+	"go-websocket/configs"
 	"go-websocket/tools/crypto"
-	"go-websocket/tools/readconfig"
-	"net"
 	"strconv"
 	"strings"
 )
@@ -22,9 +20,8 @@ func GenUUID() string {
 
 //对称加密IP和端口，当做clientId
 func GenClientId() string {
-	raw := []byte(define.LocalHost + ":" + define.RPCPort)
-	key := readconfig.ConfigData.String("common::crypto_key")
-	str, err := crypto.Encrypt(raw, []byte(key))
+	raw := []byte(configs.Conf.CommonConf.LocalHost + ":" + configs.Conf.CommonConf.RPCPort)
+	str, err := crypto.Encrypt(raw, []byte(configs.Conf.CommonConf.CryptoKey))
 	if err != nil {
 		panic(err)
 	}
@@ -50,13 +47,12 @@ func ParseRedisAddrValue(redisValue string) (host string, port string, err error
 
 //判断地址是否为本机
 func IsAddrLocal(host string, port string) bool {
-	return host == define.LocalHost && port == define.RPCPort
+	return host == configs.Conf.CommonConf.LocalHost && port == configs.Conf.CommonConf.RPCPort
 }
 
 //是否集群
 func IsCluster() bool {
-	cluster, _ := readconfig.ConfigData.Bool("common::cluster")
-	return cluster
+	return configs.Conf.CommonConf.IscCluster
 }
 
 //生成RPC通信端口号，目前是ws端口号+1000
@@ -68,9 +64,7 @@ func GenRpcPort(port string) string {
 //获取client key地址信息
 func GetAddrInfoAndIsLocal(clientId string) (addr string, host string, port string, isLocal bool, err error) {
 	//解密ClientId
-	key := readconfig.ConfigData.String("common::crypto_key")
-
-	addr, err = crypto.Decrypt(clientId, []byte(key))
+	addr, err = crypto.Decrypt(clientId, []byte(configs.Conf.CommonConf.CryptoKey))
 	if err != nil {
 		return
 	}
@@ -82,23 +76,6 @@ func GetAddrInfoAndIsLocal(clientId string) (addr string, host string, port stri
 
 	isLocal = IsAddrLocal(host, port)
 	return
-}
-
-//获取本机内网IP
-func GetIntranetIp() string {
-	addrs, _ := net.InterfaceAddrs()
-
-	for _, addr := range addrs {
-		// 检查ip地址判断是否回环地址
-		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-				return ipnet.IP.String()
-			}
-
-		}
-	}
-
-	return ""
 }
 
 func GenGroupKey(systemId, groupName string) string {

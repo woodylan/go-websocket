@@ -5,7 +5,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
-	"go-websocket/define"
+	"go-websocket/configs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,7 +42,7 @@ func init() {
 		TimestampFormat: "2006-01-02 15:04:05",
 		PrettyPrint:     false, //是否格式化json格式
 		FieldMap: logrus.FieldMap{
-			"host": define.LocalHost,
+			"host": configs.Conf.CommonConf.LocalHost,
 		},
 	})
 	//logrus.SetReportCaller(true) //是否记录代码位置

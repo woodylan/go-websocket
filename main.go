@@ -2,31 +2,25 @@ package main
 
 import (
 	"fmt"
+	"go-websocket/configs"
 	"go-websocket/define"
 	"go-websocket/pkg/etcd"
 	"go-websocket/routers"
 	"go-websocket/servers"
 	_ "go-websocket/tools/log"
-	"go-websocket/tools/readconfig"
 	"go-websocket/tools/util"
 	"net"
 	"net/http"
-	"os"
 )
 
 func main() {
-	port := getPort()
-
 	//初始化配置文件
-	if err := readconfig.InitConfig(); err != nil {
+	if err := configs.InitConfig(); err != nil {
 		panic(err)
 	}
 
 	//初始化RPC服务
-	initRPCServer(port)
-
-	//记录本机内网IP地址
-	define.LocalHost = util.GetIntranetIp()
+	initRPCServer()
 
 	//将服务器地址、端口注册到etcd中
 	registerServer()
@@ -37,20 +31,19 @@ func main() {
 	//启动一个定时器用来发送心跳
 	servers.PingTimer()
 
-	fmt.Printf("服务器启动成功，端口号：%s\n", port)
+	fmt.Printf("服务器启动成功，端口号：%s\n", configs.Conf.CommonConf.Port)
 
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	if err := http.ListenAndServe(":"+configs.Conf.CommonConf.Port, nil); err != nil {
 		panic(err)
 	}
 }
 
-func initRPCServer(port string) {
+func initRPCServer() {
 	//如果是集群，则启用RPC进行通讯
 	if util.IsCluster() {
 		//初始化RPC服务
-		rpcPort := util.GenRpcPort(port)
-		servers.InitGRpcServer(rpcPort)
-		fmt.Printf("启动RPC，端口号：%s\n", rpcPort)
+		servers.InitGRpcServer()
+		fmt.Printf("启动RPC，端口号：%s\n", configs.Conf.CommonConf.RPCPort)
 	}
 }
 
@@ -58,19 +51,19 @@ func initRPCServer(port string) {
 func registerServer() {
 	if util.IsCluster() {
 		//注册租约
-		ser, err := etcd.NewServiceReg(define.EtcdEndpoints, 5)
+		ser, err := etcd.NewServiceReg(configs.Conf.EtcdEndpoints, 5)
 		if err != nil {
 			panic(err)
 		}
 
-		hostPort := net.JoinHostPort(define.LocalHost, define.RPCPort)
+		hostPort := net.JoinHostPort(configs.Conf.CommonConf.LocalHost, configs.Conf.CommonConf.RPCPort)
 		//添加key
 		err = ser.PutService(define.ETCD_SERVER_LIST+hostPort, hostPort)
 		if err != nil {
 			panic(err)
 		}
 
-		cli, err := etcd.NewClientDis(define.EtcdEndpoints)
+		cli, err := etcd.NewClientDis(configs.Conf.EtcdEndpoints)
 		if err != nil {
 			panic(err)
 		}
@@ -79,16 +72,4 @@ func registerServer() {
 			panic(err)
 		}
 	}
-}
-
-func getPort() string {
-	port := "666"
-
-	args := os.Args //获取用户输入的所有参数
-	if len(args) >= 2 && len(args[1]) != 0 {
-		port = args[1]
-	}
-
-	define.Port = port
-	return port
 }

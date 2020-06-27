@@ -31,7 +31,7 @@ func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	systemId := r.Header.Get("systemId")
+	systemId := r.Header.Get("SystemId")
 	servers.AddClient2Group(systemId, inputData.GroupName, inputData.ClientId, inputData.UserId, inputData.Extend)
 
 	api.Render(w, retcode.SUCCESS, "success", []string{})
