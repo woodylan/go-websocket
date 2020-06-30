@@ -7,6 +7,7 @@ import (
 	"go-websocket/pkg/etcd"
 	"go-websocket/routers"
 	"go-websocket/servers"
+	"go-websocket/tools/log"
 	_ "go-websocket/tools/log"
 	"go-websocket/tools/util"
 	"net"
@@ -18,6 +19,8 @@ func main() {
 	if err := configs.InitConfig(); err != nil {
 		panic(err)
 	}
+
+	log.Init()
 
 	//初始化RPC服务
 	initRPCServer()

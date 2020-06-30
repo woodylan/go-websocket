@@ -68,6 +68,8 @@ func InitConfig() (err error) {
 		return err
 	}
 
+	Conf.CommonConf.CryptoKey = configData.String("common::crypto_key")
+
 	Conf.EtcdConf.Host = configData.String("etcd::host")
 	if len(Conf.EtcdConf.Host) > 0 {
 		Conf.EtcdEndpoints = append(Conf.EtcdEndpoints, Conf.EtcdConf.Host)

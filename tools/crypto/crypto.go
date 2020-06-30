@@ -36,10 +36,14 @@ func pKCS7Padding(ciphertext []byte, blockSize int) []byte {
 	return append(ciphertext, padtext...)
 }
 
-func pKCS7UnPadding(origData []byte) []byte {
+func pKCS7UnPadding(origData []byte) ([]byte, error) {
 	length := len(origData)
 	unpadding := int(origData[length-1])
-	return origData[:(length - unpadding)]
+	if length-unpadding < 0 || length-unpadding > len(origData) {
+		return nil, errors.New("unPadding error")
+	}
+
+	return origData[:(length - unpadding)], nil
 }
 
 //AES加密
@@ -91,6 +95,6 @@ func aesCBCDncrypt(encryptData, key []byte) ([]byte, error) {
 
 	mode.CryptBlocks(encryptData, encryptData)
 	//解填充
-	encryptData = pKCS7UnPadding(encryptData)
-	return encryptData, nil
+	encryptData, err = pKCS7UnPadding(encryptData)
+	return encryptData, err
 }

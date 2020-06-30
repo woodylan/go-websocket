@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func init() {
+func Init() {
 	basePath := getCurrentDirectory()
 
 	writer, err := rotatelogs.New(
