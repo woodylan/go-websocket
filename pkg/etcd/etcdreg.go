@@ -44,8 +44,10 @@ func NewServiceReg(addr []string, timeNum int64) (*ServiceReg, error) {
 func (this *ServiceReg) setLease(timeNum int64) error {
 	lease := clientv3.NewLease(this.client)
 
-	leaseResp, err := lease.Grant(context.TODO(), timeNum)
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
+	leaseResp, err := lease.Grant(ctx, timeNum)
 	if err != nil {
+		cancel()
 		return err
 	}
 
