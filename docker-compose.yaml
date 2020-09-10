@@ -1,0 +1,50 @@
+version: '3.5'
+services:
+  ws_etcd1:
+    image: quay.io/coreos/etcd
+    container_name: ws_etcd1
+    command: etcd -name ws_etcd1 -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379 -listen-peer-urls http://0.0.0.0:2380 -initial-cluster-token etcd-cluster -initial-cluster "ws_etcd1=http://ws_etcd1:2380,ws_etcd2=http://ws_etcd2:2380,ws_etcd3=http://ws_etcd3:2380" -initial-cluster-state new
+    ports:
+      - "23791:2379"
+      - "23801:2380"
+    networks:
+      - ws-net
+
+  ws_etcd2:
+    image: quay.io/coreos/etcd
+    container_name: ws_etcd2
+    command: etcd -name ws_etcd2 -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379 -listen-peer-urls http://0.0.0.0:2380 -initial-cluster-token etcd-cluster -initial-cluster "ws_etcd1=http://ws_etcd1:2380,ws_etcd2=http://ws_etcd2:2380,ws_etcd3=http://ws_etcd3:2380" -initial-cluster-state new
+    ports:
+      - "23792:2379"
+      - "23802:2380"
+    networks:
+      - ws-net
+
+  ws_etcd3:
+    image: quay.io/coreos/etcd
+    container_name: ws_etcd3
+    command: etcd -name ws_etcd3 -advertise-client-urls http://0.0.0.0:2379 -listen-client-urls http://0.0.0.0:2379 -listen-peer-urls http://0.0.0.0:2380 -initial-cluster-token etcd-cluster -initial-cluster "ws_etcd1=http://ws_etcd1:2380,ws_etcd2=http://ws_etcd2:2380,ws_etcd3=http://ws_etcd3:2380" -initial-cluster-state new
+    ports:
+      - "23793:2379"
+      - "23803:2380"
+    networks:
+      - ws-net
+
+  webapp:
+    container_name: go-websocket
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    command: /data/go-websocket/go-websocket -c /data/go-websocket/conf/app.cluster.ini
+    depends_on:
+      - ws_etcd1
+      - ws_etcd2
+      - ws_etcd3
+    ports:
+      - "6000:6000"
+    networks:
+      - ws-net
+
+networks:
+  app-net:
+    name: ws-net

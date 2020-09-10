@@ -3,7 +3,6 @@ module go-websocket
 go 1.13
 
 require (
-	github.com/astaxie/beego v1.12.0
 	github.com/coreos/bbolt v1.3.3 // indirect
 	github.com/coreos/etcd v3.3.17+incompatible
 	github.com/coreos/go-semver v0.2.0 // indirect
@@ -11,6 +10,7 @@ require (
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/fastly/go-utils v0.0.0-20180712184237-d95a45783239 // indirect
+	github.com/go-ini/ini v1.61.0
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
 	github.com/gogo/protobuf v1.3.1 // indirect
@@ -49,5 +49,6 @@ require (
 	google.golang.org/grpc v1.26.0
 	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
 	gopkg.in/go-playground/validator.v9 v9.31.0
+	gopkg.in/ini.v1 v1.61.0 // indirect
 	sigs.k8s.io/yaml v1.1.0 // indirect
 )

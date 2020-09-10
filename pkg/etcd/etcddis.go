@@ -5,7 +5,7 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/mvcc/mvccpb"
 	log "github.com/sirupsen/logrus"
-	"go-websocket/configs"
+	"go-websocket/pkg/setting"
 	"time"
 )
 
@@ -67,15 +67,15 @@ func (this *ClientDis) extractAddrs(resp *clientv3.GetResponse) []string {
 }
 
 func (this *ClientDis) SetServiceList(key, val string) {
-	configs.Conf.ServerListLock.Lock()
-	defer configs.Conf.ServerListLock.Unlock()
-	configs.Conf.ServerList[key] = val
+	setting.GlobalSetting.ServerListLock.Lock()
+	defer setting.GlobalSetting.ServerListLock.Unlock()
+	setting.GlobalSetting.ServerList[key] = val
 	log.Info("发现服务：", key, " 地址:", val)
 }
 
 func (this *ClientDis) DelServiceList(key string) {
-	configs.Conf.ServerListLock.Lock()
-	defer configs.Conf.ServerListLock.Unlock()
-	delete(configs.Conf.ServerList, key)
+	setting.GlobalSetting.ServerListLock.Lock()
+	defer setting.GlobalSetting.ServerListLock.Unlock()
+	delete(setting.GlobalSetting.ServerList, key)
 	log.Println("服务下线:", key)
 }

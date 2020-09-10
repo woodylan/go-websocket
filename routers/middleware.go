@@ -5,6 +5,8 @@ import (
 	"go-websocket/define"
 	"go-websocket/define/retcode"
 	"go-websocket/pkg/etcd"
+	"go-websocket/servers"
+	"go-websocket/tools/util"
 	"net/http"
 )
 
@@ -23,15 +25,22 @@ func AccessTokenMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		//判断是否被注册
-		resp, err := etcd.Get(define.ETCD_PREFIX_ACCOUNT_INFO + systemId)
-		if err != nil {
-			api.Render(w, retcode.FAIL, "etcd服务器错误", []string{})
-			return
-		}
+		if util.IsCluster() {
+			resp, err := etcd.Get(define.ETCD_PREFIX_ACCOUNT_INFO + systemId)
+			if err != nil {
+				api.Render(w, retcode.FAIL, "etcd服务器错误", []string{})
+				return
+			}
 
-		if resp.Count == 0 {
-			api.Render(w, retcode.FAIL, "系统ID无效", []string{})
-			return
+			if resp.Count == 0 {
+				api.Render(w, retcode.FAIL, "系统ID无效", []string{})
+				return
+			}
+		} else {
+			if _, ok := servers.SystemMap.Load(systemId); !ok {
+				api.Render(w, retcode.FAIL, "系统ID无效", []string{})
+				return
+			}
 		}
 
 		next.ServeHTTP(w, r)

@@ -3,7 +3,7 @@ package send2clients
 import (
 	"encoding/json"
 	. "github.com/smartystreets/goconvey/convey"
-	"go-websocket/configs"
+	"go-websocket/pkg/setting"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -23,10 +23,7 @@ type retMessage struct {
 
 func newServer(t *testing.T) *testServer {
 	var s testServer
-
-	if err := configs.InitConfig(); err != nil {
-		panic(err)
-	}
+	setting.Default()
 
 	controller := &Controller{}
 	s.Server = httptest.NewServer(http.HandlerFunc(controller.Run))

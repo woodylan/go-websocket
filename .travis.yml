@@ -11,9 +11,9 @@ before_deploy:
   - CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o go-websocket-linux-amd64
   - CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o go-websocket-windows-amd64.exe
   - CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o go-websocket-darwin-amd64
-  - zip -r go-websocket-linux-amd64.zip go-websocket-linux-amd64 configs/config.ini
-  - zip -r go-websocket-windows-amd64.zip go-websocket-windows-amd64.exe configs/config.ini
-  - zip -r go-websocket-darwin-amd64.zip go-websocket-darwin-amd64 configs/config.ini
+  - zip -r go-websocket-linux-amd64.zip go-websocket-linux-amd64 conf/*
+  - zip -r go-websocket-windows-amd64.zip go-websocket-windows-amd64.exe conf/*
+  - zip -r go-websocket-darwin-amd64.zip go-websocket-darwin-amd64 conf/*
 
 deploy:
   provider: releases

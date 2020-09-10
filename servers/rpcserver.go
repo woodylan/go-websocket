@@ -3,7 +3,7 @@ package servers
 import (
 	"context"
 	log "github.com/sirupsen/logrus"
-	"go-websocket/configs"
+	"go-websocket/pkg/setting"
 	"go-websocket/servers/pb"
 	"go-websocket/tools/util"
 	"google.golang.org/grpc"
@@ -14,8 +14,8 @@ type CommonServiceServer struct{}
 
 func (this *CommonServiceServer) Send2Client(ctx context.Context, req *pb.Send2ClientReq) (*pb.Send2ClientReply, error) {
 	log.WithFields(log.Fields{
-		"host":     configs.Conf.CommonConf.LocalHost,
-		"port":     configs.Conf.CommonConf.Port,
+		"host":     setting.GlobalSetting.LocalHost,
+		"port":     setting.CommonSetting.HttpPort,
 		"clientId": req.ClientId,
 	}).Info("接收到RPC指定客户端消息")
 	SendMessage2LocalClient(req.MessageId, req.ClientId, req.SendUserId, int(req.Code), req.Message, &req.Data)
@@ -24,8 +24,8 @@ func (this *CommonServiceServer) Send2Client(ctx context.Context, req *pb.Send2C
 
 func (this *CommonServiceServer) CloseClient(ctx context.Context, req *pb.CloseClientReq) (*pb.CloseClientReply, error) {
 	log.WithFields(log.Fields{
-		"host":     configs.Conf.CommonConf.LocalHost,
-		"port":     configs.Conf.CommonConf.Port,
+		"host":     setting.GlobalSetting.LocalHost,
+		"port":     setting.CommonSetting.HttpPort,
 		"clientId": req.ClientId,
 	}).Info("接收到RPC关闭连接")
 	CloseLocalClient(req.ClientId, req.SystemId)
@@ -45,8 +45,8 @@ func (this *CommonServiceServer) BindGroup(ctx context.Context, req *pb.BindGrou
 
 func (this *CommonServiceServer) Send2Group(ctx context.Context, req *pb.Send2GroupReq) (*pb.Send2GroupReply, error) {
 	log.WithFields(log.Fields{
-		"host": configs.Conf.CommonConf.LocalHost,
-		"port": configs.Conf.CommonConf.Port,
+		"host": setting.GlobalSetting.LocalHost,
+		"port": setting.CommonSetting.HttpPort,
 	}).Info("接收到RPC发送分组消息")
 	Manager.SendMessage2LocalGroup(req.SystemId, req.MessageId, req.SendUserId, req.GroupName, int(req.Code), req.Message, &req.Data)
 	return &pb.Send2GroupReply{}, nil
@@ -54,8 +54,8 @@ func (this *CommonServiceServer) Send2Group(ctx context.Context, req *pb.Send2Gr
 
 func (this *CommonServiceServer) Send2System(ctx context.Context, req *pb.Send2SystemReq) (*pb.Send2SystemReply, error) {
 	log.WithFields(log.Fields{
-		"host": configs.Conf.CommonConf.LocalHost,
-		"port": configs.Conf.CommonConf.Port,
+		"host": setting.GlobalSetting.LocalHost,
+		"port": setting.CommonSetting.HttpPort,
 	}).Info("接收到RPC发送系统消息")
 	Manager.SendMessage2LocalSystem(req.SystemId, req.MessageId, req.SendUserId, int(req.Code), req.Message, &req.Data)
 	return &pb.Send2SystemReply{}, nil
@@ -69,7 +69,7 @@ func (this *CommonServiceServer) GetGroupClients(ctx context.Context, req *pb.Ge
 }
 
 func InitGRpcServer() {
-	go createGRPCServer(":" + configs.Conf.CommonConf.RPCPort)
+	go createGRPCServer(":" + setting.CommonSetting.RPCPort)
 }
 
 func createGRPCServer(port string) {

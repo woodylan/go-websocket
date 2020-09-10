@@ -3,7 +3,7 @@ package servers
 import (
 	"context"
 	log "github.com/sirupsen/logrus"
-	"go-websocket/configs"
+	"go-websocket/pkg/setting"
 	"go-websocket/servers/pb"
 	"google.golang.org/grpc"
 	"sync"
@@ -22,8 +22,8 @@ func SendRpc2Client(addr string, messageId, sendUserId, clientId string, code in
 	defer conn.Close()
 
 	log.WithFields(log.Fields{
-		"host":     configs.Conf.CommonConf.LocalHost,
-		"port":     configs.Conf.CommonConf.Port,
+		"host":     setting.GlobalSetting.LocalHost,
+		"port":     setting.CommonSetting.HttpPort,
 		"add":      addr,
 		"clientId": clientId,
 		"msg":      data,
@@ -48,8 +48,8 @@ func CloseRpcClient(addr string, clientId, systemId string) {
 	defer conn.Close()
 
 	log.WithFields(log.Fields{
-		"host":     configs.Conf.CommonConf.LocalHost,
-		"port":     configs.Conf.CommonConf.Port,
+		"host":     setting.GlobalSetting.LocalHost,
+		"port":     setting.CommonSetting.HttpPort,
 		"add":      addr,
 		"clientId": clientId,
 	}).Info("发送关闭连接到服务器")
@@ -84,9 +84,9 @@ func SendRpcBindGroup(addr string, systemId string, groupName string, clientId s
 
 //发送分组消息
 func SendGroupBroadcast(systemId string, messageId, sendUserId, groupName string, code int, message string, data *string) {
-	configs.Conf.ServerListLock.Lock()
-	defer configs.Conf.ServerListLock.Unlock()
-	for _, addr := range configs.Conf.ServerList {
+	setting.GlobalSetting.ServerListLock.Lock()
+	defer setting.GlobalSetting.ServerListLock.Unlock()
+	for _, addr := range setting.GlobalSetting.ServerList {
 		conn := grpcConn(addr)
 		defer conn.Close()
 
@@ -108,9 +108,9 @@ func SendGroupBroadcast(systemId string, messageId, sendUserId, groupName string
 
 //发送系统信息
 func SendSystemBroadcast(systemId string, messageId, sendUserId string, code int, message string, data *string) {
-	configs.Conf.ServerListLock.Lock()
-	defer configs.Conf.ServerListLock.Unlock()
-	for _, addr := range configs.Conf.ServerList {
+	setting.GlobalSetting.ServerListLock.Lock()
+	defer setting.GlobalSetting.ServerListLock.Unlock()
+	for _, addr := range setting.GlobalSetting.ServerList {
 		conn := grpcConn(addr)
 		defer conn.Close()
 
@@ -130,16 +130,16 @@ func SendSystemBroadcast(systemId string, messageId, sendUserId string, code int
 }
 
 func GetOnlineListBroadcast(systemId *string, groupName *string) (clientIdList []string) {
-	configs.Conf.ServerListLock.Lock()
-	defer configs.Conf.ServerListLock.Unlock()
+	setting.GlobalSetting.ServerListLock.Lock()
+	defer setting.GlobalSetting.ServerListLock.Unlock()
 
-	serverCount := len(configs.Conf.ServerList)
+	serverCount := len(setting.GlobalSetting.ServerList)
 
 	onlineListChan := make(chan []string, serverCount)
 	var wg sync.WaitGroup
 
 	wg.Add(serverCount)
-	for _, addr := range configs.Conf.ServerList {
+	for _, addr := range setting.GlobalSetting.ServerList {
 		go func(addr string) {
 			conn := grpcConn(addr)
 			defer conn.Close()

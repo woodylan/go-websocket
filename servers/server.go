@@ -3,7 +3,7 @@ package servers
 import (
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
-	"go-websocket/configs"
+	"go-websocket/pkg/setting"
 	"go-websocket/tools/util"
 	"net/http"
 	"time"
@@ -171,8 +171,8 @@ func GetOnlineList(systemId *string, groupName *string) map[string]interface{} {
 //通过本服务器发送信息
 func SendMessage2LocalClient(messageId, clientId string, sendUserId string, code int, msg string, data *string) {
 	log.WithFields(log.Fields{
-		"host":     configs.Conf.CommonConf.LocalHost,
-		"port":     configs.Conf.CommonConf.Port,
+		"host":     setting.GlobalSetting.LocalHost,
+		"port":     setting.CommonSetting.HttpPort,
 		"clientId": clientId,
 	}).Info("发送到通道")
 	ToClientChan <- clientInfo{ClientId: clientId, MessageId: messageId, SendUserId: sendUserId, Code: code, Msg: msg, Data: data}
@@ -187,8 +187,8 @@ func CloseLocalClient(clientId, systemId string) {
 		}
 		Manager.DisConnect <- conn
 		log.WithFields(log.Fields{
-			"host":     configs.Conf.CommonConf.LocalHost,
-			"port":     configs.Conf.CommonConf.Port,
+			"host":     setting.GlobalSetting.LocalHost,
+			"port":     setting.CommonSetting.HttpPort,
 			"clientId": clientId,
 		}).Info("主动踢掉客户端")
 	}
@@ -200,8 +200,8 @@ func WriteMessage() {
 	for {
 		clientInfo := <-ToClientChan
 		log.WithFields(log.Fields{
-			"host":       configs.Conf.CommonConf.LocalHost,
-			"port":       configs.Conf.CommonConf.Port,
+			"host":       setting.GlobalSetting.LocalHost,
+			"port":       setting.CommonSetting.HttpPort,
 			"clientId":   clientInfo.ClientId,
 			"messageId":  clientInfo.MessageId,
 			"sendUserId": clientInfo.SendUserId,
@@ -213,8 +213,8 @@ func WriteMessage() {
 			if err := Render(conn.Socket, clientInfo.MessageId, clientInfo.SendUserId, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
 				Manager.DisConnect <- conn
 				log.WithFields(log.Fields{
-					"host":     configs.Conf.CommonConf.LocalHost,
-					"port":     configs.Conf.CommonConf.Port,
+					"host":     setting.GlobalSetting.LocalHost,
+					"port":     setting.CommonSetting.HttpPort,
 					"clientId": clientInfo.ClientId,
 					"msg":      clientInfo.Msg,
 				}).Error("客户端异常离线：" + err.Error())

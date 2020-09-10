@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	log "github.com/sirupsen/logrus"
-	"go-websocket/configs"
 	"go-websocket/define/retcode"
+	"go-websocket/pkg/setting"
 	"go-websocket/tools/util"
 	"sync"
 	"time"
@@ -57,8 +57,8 @@ func (manager *ClientManager) EventConnect(client *Client) {
 	manager.AddClient(client)
 
 	log.WithFields(log.Fields{
-		"host":     configs.Conf.CommonConf.LocalHost,
-		"port":     configs.Conf.CommonConf.Port,
+		"host":     setting.GlobalSetting.LocalHost,
+		"port":     setting.CommonSetting.HttpPort,
 		"clientId": client.ClientId,
 		"counts":   Manager.Count(),
 	}).Info("客户端已连接")
@@ -86,8 +86,8 @@ func (manager *ClientManager) EventDisconnect(client *Client) {
 	}
 
 	log.WithFields(log.Fields{
-		"host":     configs.Conf.CommonConf.LocalHost,
-		"port":     configs.Conf.CommonConf.Port,
+		"host":     setting.GlobalSetting.LocalHost,
+		"port":     setting.CommonSetting.HttpPort,
 		"clientId": client.ClientId,
 		"counts":   Manager.Count(),
 		"seconds":  uint64(time.Now().Unix()) - client.ConnectTime,

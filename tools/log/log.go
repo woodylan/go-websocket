@@ -5,13 +5,13 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
-	"go-websocket/configs"
+	"go-websocket/pkg/setting"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-func Init() {
+func Setup() {
 	basePath := getCurrentDirectory()
 
 	writer, err := rotatelogs.New(
@@ -42,7 +42,7 @@ func Init() {
 		TimestampFormat: "2006-01-02 15:04:05",
 		PrettyPrint:     false, //是否格式化json格式
 		FieldMap: logrus.FieldMap{
-			"host": configs.Conf.CommonConf.LocalHost,
+			"host": setting.GlobalSetting.LocalHost,
 		},
 	})
 	//logrus.SetReportCaller(true) //是否记录代码位置

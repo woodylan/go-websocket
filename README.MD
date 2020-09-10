@@ -7,7 +7,7 @@
 
 ## 简介
 
-本系统基于Golang、Redis、RPC实现分布式WebSocket微服务，也可以单机部署，单机部署不需要Redis、RPC。分布式部署可以支持nginx负责均衡、水平扩容部署，程序之间使用RPC通信。
+本系统基于Golang、ETCD、RPC实现分布式WebSocket微服务，也可以单机部署，单机部署不需要ETCD、RPC。分布式部署可以支持nginx负责均衡、水平扩容部署，程序之间使用RPC通信。
 
 基本流程为：用ws协议连接本服务，得到一个clientId，由客户端上报这个clinetId给服务端，服务端拿到这个clientId之后，可以给这个客户端发送信息，绑定这个客户端都分组，给分组发送消息。
 
@@ -61,43 +61,56 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build
 
 **执行：**
 
-编译成功之后会得到一个二进制文件`go-websocket`，执行该二进制文件，文件名后面跟着的是端口号，下面的命令`666`则表示端口号，你可以可以改成其他的。
+编译成功之后会得到一个二进制文件`go-websocket`，执行该二进制文件。
 
 ```shell
-./go-websocket 666
+./go-websocket -c ./conf/app.ini
 ```
 
 **连接测试：**
 
-打开支持Websocket的客户端，输入 `ws://127.0.0.1:666/ws` 进行连接，连接成功会返回`clientId`。
+打开支持Websocket的客户端，输入 `ws://127.0.0.1:6000/ws` 进行连接，连接成功会返回`clientId`。
 
 
 
-## 单机部署
+## docker体验
 
-单机部署很简单，不需要配置Redis，只需要编译然后运行该二进制文件就可以了，步骤如上。
+### 体验单机
+
+1. 构建镜像
+
+   ```shell
+   docker build -t go-websocket .
+   ```
+
+2. 基于镜像运行容器
+
+   ```shell
+   docker run -tid -p 6000:6000 go-websocket
+   ```
+
+### 体验集群，同时运行ETCD集群
+在当前目录下，直接运行` docker-compose up` 即可体验。
 
 
 
-## 分布式部署
-
-**安装ETCD：** 参考网上教程
-
-
+## 配置
 
 **配置文件：**
 
-配置文件位于项目根目录的`configs/config.ini`，`cluster`为true表示分布式部署。
+配置文件位于项目根目录的`conf/app.ini`。
 
 ```ini
 [common]
-# 是否分布式部署
-cluster = true
-# 对称加密key 16位
-crypto_key = xxxxxxxxxxxxxxxx
+HttpPort = 6000
+RPCPort = 7000
+# 是否集群,单机则设为false
+Cluster = true
+# 对称加密key
+CryptoKey = Adba723b7fe06819
 
 [etcd]
-host = 127.0.0.1:2379
+Endpoints = 127.0.0.1:2379, 127.0.0.2:2379, 127.0.0.3:2379
 ```
 
 **运行项目：**
@@ -157,6 +170,7 @@ server {
 - [x] 错误日志
 - [x] 参数校验
 - [x] 关闭某个连接
+- [x] 支持docker
 - [ ] 查询某个客户端是否在线
 
 

@@ -3,9 +3,8 @@ package util
 import (
 	"errors"
 	uuid "github.com/satori/go.uuid"
-	"go-websocket/configs"
+	"go-websocket/pkg/setting"
 	"go-websocket/tools/crypto"
-	"strconv"
 	"strings"
 )
 
@@ -20,8 +19,8 @@ func GenUUID() string {
 
 //对称加密IP和端口，当做clientId
 func GenClientId() string {
-	raw := []byte(configs.Conf.CommonConf.LocalHost + ":" + configs.Conf.CommonConf.RPCPort)
-	str, err := crypto.Encrypt(raw, []byte(configs.Conf.CommonConf.CryptoKey))
+	raw := []byte(setting.GlobalSetting.LocalHost + ":" + setting.CommonSetting.RPCPort)
+	str, err := crypto.Encrypt(raw, []byte(setting.CommonSetting.CryptoKey))
 	if err != nil {
 		panic(err)
 	}
@@ -47,24 +46,18 @@ func ParseRedisAddrValue(redisValue string) (host string, port string, err error
 
 //判断地址是否为本机
 func IsAddrLocal(host string, port string) bool {
-	return host == configs.Conf.CommonConf.LocalHost && port == configs.Conf.CommonConf.RPCPort
+	return host == setting.GlobalSetting.LocalHost && port == setting.CommonSetting.RPCPort
 }
 
 //是否集群
 func IsCluster() bool {
-	return configs.Conf.CommonConf.IscCluster
-}
-
-//生成RPC通信端口号，目前是ws端口号+1000
-func GenRpcPort(port string) string {
-	iPort, _ := strconv.Atoi(port)
-	return strconv.Itoa(iPort + 1000)
+	return setting.CommonSetting.Cluster
 }
 
 //获取client key地址信息
 func GetAddrInfoAndIsLocal(clientId string) (addr string, host string, port string, isLocal bool, err error) {
 	//解密ClientId
-	addr, err = crypto.Decrypt(clientId, []byte(configs.Conf.CommonConf.CryptoKey))
+	addr, err = crypto.Decrypt(clientId, []byte(setting.CommonSetting.CryptoKey))
 	if err != nil {
 		return
 	}

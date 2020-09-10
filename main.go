@@ -2,26 +2,23 @@ package main
 
 import (
 	"fmt"
-	"go-websocket/configs"
 	"go-websocket/define"
 	"go-websocket/pkg/etcd"
+	"go-websocket/pkg/setting"
 	"go-websocket/routers"
 	"go-websocket/servers"
 	"go-websocket/tools/log"
-	_ "go-websocket/tools/log"
 	"go-websocket/tools/util"
 	"net"
 	"net/http"
 )
 
+func init() {
+	setting.Setup()
+	log.Setup()
+}
+
 func main() {
-	//初始化配置文件
-	if err := configs.InitConfig(); err != nil {
-		panic(err)
-	}
-
-	log.Init()
-
 	//初始化RPC服务
 	initRPCServer()
 
@@ -34,9 +31,9 @@ func main() {
 	//启动一个定时器用来发送心跳
 	servers.PingTimer()
 
-	fmt.Printf("服务器启动成功，端口号：%s\n", configs.Conf.CommonConf.Port)
+	fmt.Printf("服务器启动成功，端口号：%s\n", setting.CommonSetting.HttpPort)
 
-	if err := http.ListenAndServe(":"+configs.Conf.CommonConf.Port, nil); err != nil {
+	if err := http.ListenAndServe(":"+setting.CommonSetting.HttpPort, nil); err != nil {
 		panic(err)
 	}
 }
@@ -46,7 +43,7 @@ func initRPCServer() {
 	if util.IsCluster() {
 		//初始化RPC服务
 		servers.InitGRpcServer()
-		fmt.Printf("启动RPC，端口号：%s\n", configs.Conf.CommonConf.RPCPort)
+		fmt.Printf("启动RPC，端口号：%s\n", setting.CommonSetting.RPCPort)
 	}
 }
 
@@ -54,19 +51,19 @@ func initRPCServer() {
 func registerServer() {
 	if util.IsCluster() {
 		//注册租约
-		ser, err := etcd.NewServiceReg(configs.Conf.EtcdEndpoints, 5)
+		ser, err := etcd.NewServiceReg(setting.EtcdSetting.Endpoints, 5)
 		if err != nil {
 			panic(err)
 		}
 
-		hostPort := net.JoinHostPort(configs.Conf.CommonConf.LocalHost, configs.Conf.CommonConf.RPCPort)
+		hostPort := net.JoinHostPort(setting.GlobalSetting.LocalHost, setting.CommonSetting.RPCPort)
 		//添加key
 		err = ser.PutService(define.ETCD_SERVER_LIST+hostPort, hostPort)
 		if err != nil {
 			panic(err)
 		}
 
-		cli, err := etcd.NewClientDis(configs.Conf.EtcdEndpoints)
+		cli, err := etcd.NewClientDis(setting.EtcdSetting.Endpoints)
 		if err != nil {
 			panic(err)
 		}
