@@ -46,5 +46,5 @@ services:
       - ws-net
 
 networks:
-  app-net:
+  ws-net:
     name: ws-net
