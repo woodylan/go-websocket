@@ -2,9 +2,9 @@ package getonlinelist
 
 import (
 	"encoding/json"
-	"go-websocket/api"
-	"go-websocket/define/retcode"
-	"go-websocket/servers"
+	"github.com/woodylan/go-websocket/api"
+	"github.com/woodylan/go-websocket/define/retcode"
+	"github.com/woodylan/go-websocket/servers"
 	"net/http"
 )
 

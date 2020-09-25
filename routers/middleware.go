@@ -1,12 +1,12 @@
 package routers
 
 import (
-	"go-websocket/api"
-	"go-websocket/define"
-	"go-websocket/define/retcode"
-	"go-websocket/pkg/etcd"
-	"go-websocket/servers"
-	"go-websocket/tools/util"
+	"github.com/woodylan/go-websocket/api"
+	"github.com/woodylan/go-websocket/define"
+	"github.com/woodylan/go-websocket/define/retcode"
+	"github.com/woodylan/go-websocket/pkg/etcd"
+	"github.com/woodylan/go-websocket/servers"
+	"github.com/woodylan/go-websocket/tools/util"
 	"net/http"
 )
 

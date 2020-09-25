@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/coreos/etcd/clientv3"
 	log "github.com/sirupsen/logrus"
-	"go-websocket/pkg/setting"
+	"github.com/woodylan/go-websocket/pkg/setting"
 	"sync"
 	"time"
 )

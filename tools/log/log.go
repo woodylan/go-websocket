@@ -5,7 +5,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
-	"go-websocket/pkg/setting"
+	"github.com/woodylan/go-websocket/pkg/setting"
 	"os"
 	"path/filepath"
 	"strings"

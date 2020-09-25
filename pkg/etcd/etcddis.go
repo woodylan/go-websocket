@@ -5,7 +5,7 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/mvcc/mvccpb"
 	log "github.com/sirupsen/logrus"
-	"go-websocket/pkg/setting"
+	"github.com/woodylan/go-websocket/pkg/setting"
 	"time"
 )
 

@@ -3,8 +3,8 @@ package servers
 import (
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
-	"go-websocket/pkg/setting"
-	"go-websocket/tools/util"
+	"github.com/woodylan/go-websocket/pkg/setting"
+	"github.com/woodylan/go-websocket/tools/util"
 	"net/http"
 	"time"
 )
