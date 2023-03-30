@@ -35,6 +35,7 @@ var cfg *ini.File
 
 func Setup() {
 	configFile := flag.String("c", "conf/app.ini", "-c conf/app.ini")
+	flag.Parse()
 
 	var err error
 	cfg, err = ini.Load(*configFile)
