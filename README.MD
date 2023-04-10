@@ -69,7 +69,7 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build
 
 **连接测试：**
 
-打开支持Websocket的客户端，输入 `ws://127.0.0.1:6000/ws` 进行连接，连接成功会返回`clientId`。
+打开支持Websocket的客户端，输入 `ws://127.0.0.1:7800/ws?systemId=xxx` 进行连接，连接成功会返回`clientId`。
 
 
 
@@ -86,7 +86,7 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build
 2. 基于镜像运行容器
 
    ```shell
-   docker run -tid -p 6000:6000 go-websocket
+   docker run -tid -p 7800:7800 go-websocket
    ```
 
 ### 体验集群，同时运行ETCD集群
@@ -106,7 +106,7 @@ HttpPort = 6000
 RPCPort = 7000
 # 是否集群,单机则设为false
 Cluster = true
-# 对称加密key
+# 对称加密key 只允许16、24、32字节长度
 CryptoKey = Adba723b7fe06819
 
 [etcd]
@@ -121,12 +121,12 @@ Endpoints = 127.0.0.1:2379, 127.0.0.2:2379, 127.0.0.3:2379
 
 ```nginx
 upstream ws_cluster {
-    server 127.0.0.1:666;
-    server 127.0.0.1:667;
+    server 127.0.0.1:7800;
+    #server 127.0.0.1:7801;
 }
 
 server {
-    listen  660;
+    listen  7000;
     server_name ws.example.com;
 
     access_log /logs/access.log;

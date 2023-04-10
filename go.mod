@@ -1,6 +1,6 @@
 module github.com/woodylan/go-websocket
 
-go 1.13
+go 1.16
 
 require (
 	github.com/coreos/bbolt v1.3.3 // indirect

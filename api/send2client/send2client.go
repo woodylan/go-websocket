@@ -16,7 +16,7 @@ type inputData struct {
 	SendUserId string `json:"sendUserId"`
 	Code       int    `json:"code"`
 	Msg        string `json:"msg"`
-	Data       interface{} `json:"data"`
+	Data       string `json:"data"`
 }
 
 func (c *Controller) Run(w http.ResponseWriter, r *http.Request) {
