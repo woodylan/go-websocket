@@ -1,12 +1,14 @@
 package servers
 
 import (
+	"encoding/json"
+	"net/http"
+	"time"
+
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 	"github.com/woodylan/go-websocket/pkg/setting"
 	"github.com/woodylan/go-websocket/tools/util"
-	"net/http"
-	"time"
 )
 
 //channel通道
@@ -209,8 +211,9 @@ func WriteMessage() {
 			"msg":        clientInfo.Msg,
 			"data":       clientInfo.Data,
 		}).Info("发送到本机")
+		jsonRawData := json.RawMessage([]byte(*clientInfo.Data))
 		if conn, err := Manager.GetByClientId(clientInfo.ClientId); err == nil && conn != nil {
-			if err := Render(conn.Socket, clientInfo.MessageId, clientInfo.SendUserId, clientInfo.Code, clientInfo.Msg, clientInfo.Data); err != nil {
+			if err := Render(conn.Socket, clientInfo.MessageId, clientInfo.SendUserId, clientInfo.Code, clientInfo.Msg, jsonRawData); err != nil {
 				Manager.DisConnect <- conn
 				log.WithFields(log.Fields{
 					"host":     setting.GlobalSetting.LocalHost,
